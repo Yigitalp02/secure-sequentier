@@ -19,7 +19,7 @@
   <!-- Exclude SecureSolution2/appsettings.json from publish to avoid conflict -->
   <Target Name="ExcludeReferencedAppSettings" BeforeTargets="GetCopyToPublishDirectoryItems">
     <ItemGroup>
-      <ContentWithTargetPath Remove="@(ContentWithTargetPath)" Condition="'%(RelativePath)' == 'SecureSolution2/appsettings.json'" />
+      <ContentWithTargetPath Remove="@(ContentWithTargetPath)" Condition="'%(Identity)' != '' AND $([System.String]::Copy('%(Identity)').Replace('\', '/').EndsWith('SecureSolution2/appsettings.json')))" />
     </ItemGroup>
   </Target>
 

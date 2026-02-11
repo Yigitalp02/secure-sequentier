@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Web.Models;
@@ -289,7 +288,7 @@ namespace Web.Controllers
             return Json(new { status = "Unknown" });
         }
 
-        /* ─────────────── VERIFY ─────────────── */
+        /* ─────────────── VERIFY (100% client-side, no upload) ─────────────── */
         [HttpGet]
         public IActionResult Verify()
         {
@@ -297,99 +296,11 @@ namespace Web.Controllers
             return View();
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Verify(IFormFile file, string hash, string algorithm)
-        {
-            EnsureCurrentProfile();
-
-            if (file is null || file.Length == 0)
-            {
-                ViewBag.Error = "Please select a file.";
-                return View();
-            }
-            if (string.IsNullOrWhiteSpace(hash))
-            {
-                ViewBag.Error = "Please enter a hash value.";
-                return View();
-            }
-
-            // Hash directly in the frontend — no need to re-upload to backend
-            var expectedHash = hash.Trim().ToLower().Replace(" ", "");
-            var algo = (algorithm ?? "SHA256").ToUpper();
-
-            byte[] fileBytes;
-            using (var ms = new MemoryStream())
-            {
-                await file.CopyToAsync(ms);
-                fileBytes = ms.ToArray();
-            }
-
-            using HashAlgorithm hasher = algo switch
-            {
-                "SHA512" => SHA512.Create(),
-                "MD5" => MD5.Create(),
-                _ => SHA256.Create()
-            };
-
-            var actualHash = Convert.ToHexString(hasher.ComputeHash(fileBytes)).ToLower();
-            var match = actualHash == expectedHash;
-
-            var result = JsonSerializer.Serialize(new
-            {
-                match,
-                actualHash,
-                expectedHash,
-                algorithm = algo,
-                fileName = file.FileName,
-                fileSize = file.Length
-            });
-
-            ViewBag.Result = result;
-            return View();
-        }
-
-        /* ─────────────── HASH CALCULATOR ─────────────── */
+        /* ─────────────── HASH CALCULATOR (100% client-side, no upload) ─────────────── */
         [HttpGet]
         public IActionResult HashCalculator()
         {
             EnsureCurrentProfile();
-            return View();
-        }
-
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> HashCalculator(IFormFile file)
-        {
-            EnsureCurrentProfile();
-
-            if (file is null || file.Length == 0)
-            {
-                ViewBag.Error = "Please select a file.";
-                return View();
-            }
-
-            // Hash directly in the frontend — no need to re-upload to backend
-            byte[] fileBytes;
-            using (var ms = new MemoryStream())
-            {
-                await file.CopyToAsync(ms);
-                fileBytes = ms.ToArray();
-            }
-
-            var sha256 = Convert.ToHexString(SHA256.HashData(fileBytes)).ToLower();
-            var sha512 = Convert.ToHexString(SHA512.HashData(fileBytes)).ToLower();
-            var md5 = Convert.ToHexString(MD5.HashData(fileBytes)).ToLower();
-
-            var result = JsonSerializer.Serialize(new
-            {
-                fileName = file.FileName,
-                fileSize = file.Length,
-                sha256,
-                sha512,
-                md5,
-                timestamp = DateTime.UtcNow
-            });
-
-            ViewBag.Result = result;
             return View();
         }
 

@@ -12,8 +12,14 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDistributedMemoryCache();
 
 
-builder.Services.Configure<WebPathsOptions>(
-    builder.Configuration.GetSection("SecureSequential"));
+builder.Services.Configure<WebPathsOptions>(opt =>
+{
+    builder.Configuration.GetSection("SecureSequential").Bind(opt);
+    // Allow override via environment variable for Docker deployment
+    var envConfig = Environment.GetEnvironmentVariable("DEFAULT_CONFIG_PATH");
+    if (!string.IsNullOrEmpty(envConfig))
+        opt.DefaultConfig = envConfig;
+});
 
 builder.Services.AddSession(options =>
 {

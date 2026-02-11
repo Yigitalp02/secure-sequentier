@@ -50,10 +50,12 @@
         condition: service_healthy
     volumes:
       - /opt/stack/data/secure-sequentier/queue:/app/data/queue:ro
+      - /opt/stack/config/secure-sequentier/DefaultConfig.json:/app/DefaultConfig.json:ro
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5188
       - BACKEND_API_URL=http://secure-sequentier-backend:9999
+      - DEFAULT_CONFIG_PATH=/app/DefaultConfig.json
     networks:
       - proxy-net
       - data-net

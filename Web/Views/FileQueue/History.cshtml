@@ -1,0 +1,210 @@
+﻿@model List<Web.Models.RunRecord>
+    @{
+    // 1) Pull sorting info from ViewBag (only once)
+    var currentField = (string)ViewBag.SortField ?? "StartedAt";
+    var currentDir = (string)ViewBag.SortDir ?? "desc";
+
+    // 1a) Pull the currently selected date (or default to today)
+    var currentDate = (string)ViewBag.SelectedDate
+                      ?? DateTime.Now.ToString("yyyy-MM-dd");
+
+    // 2) Helper to emit the header <a>…</a> with ▲/▼ and preserve 'date'
+    Func<string, string, string> SortLink = (label, field) =>
+    {
+        var isCurrent = field == currentField;
+        var nextDir = isCurrent && currentDir == "asc" ? "desc" : "asc";
+        var arrow = isCurrent
+                          ? (currentDir == "asc" ? "▲" : "▼")
+                          : "";
+        var url = Url.Action("History", new
+        {
+            page = 1,
+            pageSize = ViewBag.PageSize,
+            sortField = field,
+            sortDir = nextDir,
+            date = currentDate      // <-- include date here
+        });
+        return $@"<a href=""{url}"">
+                    {label}
+                    <span class=""sort-arrow"">{arrow}</span>
+                  </a>";
+    };
+
+    // 3) Page metadata
+    ViewBag.Title = "Run History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+
+    @section Styles {
+        <style>
+            .text-processing {
+                color: orange !important;
+            }
+
+            .sort-arrow {
+                font-size: .8em;
+                margin-left: .2em;
+            }
+        </style>
+    }
+
+    <h2>Run History</h2>
+
+    @{
+    // Grab the list of dates and the currently selected date from ViewBag
+    var dates = ViewBag.AvailableDates as List<string>
+                ?? new List<string> { DateTime.Now.ToString("yyyy-MM-dd") };
+    var sel = ViewBag.SelectedDate as string
+                ?? DateTime.Now.ToString("yyyy-MM-dd");
+    }
+
+    <div id="historyContainer">
+        <!-- runs-per-page + preserve sorting -->
+        <form method="get" class="row g-2 align-items-center mb-3">
+            <div class="col-auto">
+                <label for="dateSelect" class="col-form-label">Date:</label>
+            </div>
+            <div class="col-auto">
+                <select id="dateSelect" name="date" class="form-select"
+                        onchange="this.form.submit()">
+                    @foreach (var d in dates)
+                {
+                    <option value="@d"
+                            selected="@(d == sel ? "selected" : null)">
+                        @DateTime.Parse(d).ToString("MMM dd, yyyy")
+                    </option>
+                }
+                </select>
+            </div>
+
+            @* preserve other filters *@
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@ViewBag.PageSize" />
+            <input type="hidden" name="sortField" value="@ViewBag.SortField" />
+            <input type="hidden" name="sortDir" value="@ViewBag.SortDir" />
+        </form>
+
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>@Html.Raw(SortLink("Run ID", "RunId"))</th>
+                    <th>User</th>
+                    <th>@Html.Raw(SortLink("Status", "Status"))</th>
+                    <th>@Html.Raw(SortLink("Started At", "StartedAt"))</th>
+                    <th>@Html.Raw(SortLink("Retries", "Retries"))</th>
+                    <th></th>              @* collapse toggle *@
+                    <th>Live Status</th>   @* new column *@
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var run in Model)
+            {
+                <tr>
+                    <td>@run.RunId</td>
+                    <td>@ViewBag.DisplayName</td>
+                    <td>
+                        @{
+                            var c = run.Status == "Completed" ? "text-success"
+                            : run.Status == "Failed" ? "text-danger"
+                            : "text-processing";
+                        }
+                        <span class="@c">@run.Status</span>
+                    </td>
+                    <td>@(run.StartedAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                    <td>@run.RetryCount</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#files-@run.Id"
+                                aria-expanded="false"
+                                aria-controls="files-@run.Id">
+                            Details
+                        </button>
+                    </td>
+                    <td>
+                        <a asp-controller="FileQueue"
+                           asp-action="Queue"
+                           asp-route-runId="@run.RunId"
+                           class="btn btn-sm btn-primary">
+                            View Status
+                        </a>
+                    </td>
+                </tr>
+                <tr class="collapse-row collapse" id="files-@run.Id">
+                    <td colspan="7" class="p-0">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>File</th>
+                                    <th>Status</th>
+                                    <th>Started</th>
+                                    <th>Finished</th>
+                                    <th>Retries</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var f in run.Files)
+                                {
+                                <tr>
+                                    <td>@System.IO.Path.GetFileName(f.Path)</td>
+                                    <td>
+                                        @{
+                                                var cls = f.Status == "Completed" ? "text-success"
+                                                : f.Status == "Failed" ? "text-danger"
+                                                : "text-processing";
+                                        }
+                                        <span class="@cls">@f.Status</span>
+                                    </td>
+                                    <td>@(f.StartedAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                                    <td>@(f.FinishedAt?.ToLocalTime().ToString("g") ?? "-")</td>
+                                    <td>@f.Retries</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <!-- Pager: preserve pageSize + sortField + sortDir -->
+        <nav>
+            <ul class="pagination">
+                <li class="page-item @(ViewBag.Page == 1 ? "disabled" : "")">
+                    <a class="page-link"
+                       href="@Url.Action("History", new { page = 1, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })">
+                        « First
+                    </a>
+                </li>
+                <li class="page-item @(ViewBag.Page <= 1 ? "disabled" : "")">
+                    <a class="page-link"
+                       href="@Url.Action("History", new { page = ViewBag.Page - 1, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })">
+                        ‹ Prev
+                    </a>
+                </li>
+                @for (int p = 1; p <= (int)ViewBag.TotalPages; p++)
+            {
+                <li class="page-item @(ViewBag.Page == p ? "active" : "")">
+                    <a class="page-link"
+                       href="@Url.Action("History", new { page = p, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })">
+                        @p
+                    </a>
+                </li>
+            }
+                <li class="page-item @(ViewBag.Page >= (int)ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link"
+                       href="@Url.Action("History", new { page = ViewBag.Page + 1, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })">
+                        Next ›
+                    </a>
+                </li>
+                <li class="page-item @(ViewBag.Page == (int)ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link"
+                       href="@Url.Action("History", new { page = ViewBag.TotalPages, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })">
+                        Last »
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>

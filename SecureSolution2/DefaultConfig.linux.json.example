@@ -1,0 +1,21 @@
+{
+  "WatchDirectory": "/app/data/watch",
+  "QueueDirectory": "/app/data/queue/{USER}",
+  "TimeoutSeconds": 30,
+  "DefaultRetryCount": 3,
+  "Mapping": {
+    "signer": {
+      "ExecutablePath": "/app/subsystems/SignerApp/SignerApp",
+      "OutputDirectory": "/app/data/processed/{USER}/signatures"
+    },
+    "advanced-signer": {
+      "ExecutablePath": "/app/subsystems/AdvancedSignerApp/AdvancedSignerApp",
+      "OutputDirectory": "/app/data/processed/{USER}/advanced-signatures"
+    },
+    "sub-system1": {
+      "ExecutablePath": "/app/subsystems/SuccessApp/DummySuccessApp",
+      "OutputDirectory": "/app/data/processed/{USER}/sub-system1"
+    }
+  }
+}
+

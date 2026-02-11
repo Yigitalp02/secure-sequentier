@@ -1,0 +1,21 @@
+{
+  "WatchDirectory": "C:\\Users\\{USER}\\SecureWatch",
+  "QueueDirectory": "C:\\Users\\{USER}\\SecureSequentialProfiles\\{USER}",
+  "TimeoutSeconds": 30,
+  "DefaultRetryCount": 3,
+  "Mapping": {
+    "signer": {
+      "ExecutablePath": "C:\\Users\\{USER}\\Subsystems\\SignerApp\\SignerApp.exe",
+      "OutputDirectory": "C:\\Users\\{USER}\\Processed\\{USER}\\signatures"
+    },
+    "advanced-signer": {
+      "ExecutablePath": "C:\\Users\\{USER}\\Subsystems\\AdvancedSignerApp\\AdvancedSignerApp.exe",
+      "OutputDirectory": "C:\\Users\\{USER}\\Processed\\{USER}\\advanced-signatures"
+    },
+    "sub-system1": {
+      "ExecutablePath": "C:\\Users\\{USER}\\Subsystems\\SuccessApp\\DummySuccessApp.exe",
+      "OutputDirectory": "C:\\Users\\{USER}\\Processed\\{USER}\\sub-system1"
+    }
+  }
+}
+

@@ -1,0 +1,68 @@
+@using Microsoft.AspNetCore.Http
+@{
+    ViewData["Title"] = "SecureSequential Web UI";
+    var active = Context.Session.GetString("ActiveProfile");   // set by EnsureCurrentProfile()
+    var displayName = ViewBag.DisplayName as string ?? active;
+    var subApps = ViewBag.SubApps as string[] ?? new[] { "signer" };
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm rounded-lg">
+
+                <div class="card-body">
+                    <p class="lead text-center mb-4">
+                        Welcome <strong>@displayName</strong>
+                    </p>
+                    <hr />
+                    <h4 class="mb-4 text-center">Start a Batch</h4>
+                    <form asp-action="Upload" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Target App</label>
+                            <select class="form-select" name="targetApp">
+                                @foreach (var app in subApps)
+                                {
+                                <option value="@app">@app</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Select Files</label>
+                            <input class="form-control" type="file" name="files" multiple />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Start</button>
+                    </form>
+
+                    @if (TempData["Message"] != null)
+                    {
+                    <div class="alert alert-info mt-3" role="alert">
+                        @TempData["Message"]
+                    </div>
+                    }
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            border: none;
+        }
+
+        .card-header {
+            border-bottom: none;
+        }
+
+        .btn-primary {
+            letter-spacing: 0.5px;
+        }
+    </style>
+}

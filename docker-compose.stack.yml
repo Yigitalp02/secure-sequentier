@@ -1,0 +1,71 @@
+# Secure Sequentier - Add this to /opt/stack/docker-compose.yml
+# This is the service definition to add to your existing stack
+
+  # -------------------------------------------------------
+  # SECURE SEQUENTIER - File Processing System
+  # -------------------------------------------------------
+  secure-sequentier-backend:
+    build:
+      context: /opt/stack/secure-sequentier
+      dockerfile: SecureSolution2/Dockerfile
+    container_name: secure-sequentier-backend
+    restart: unless-stopped
+    ports:
+      - "9999:9999"  # Backend API
+    volumes:
+      - /opt/stack/data/secure-sequentier/watch:/app/data/watch
+      - /opt/stack/data/secure-sequentier/queue:/app/data/queue
+      - /opt/stack/data/secure-sequentier/processed:/app/data/processed
+      - /opt/stack/data/secure-sequentier/logs:/app/data/logs
+      - /opt/stack/config/secure-sequentier/DefaultConfig.json:/app/DefaultConfig.json:ro
+      - /opt/stack/data/secure-sequentier/subsystems:/app/subsystems:ro
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:9999
+    networks:
+      - proxy-net
+      - data-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9999/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+
+  secure-sequentier-frontend:
+    build:
+      context: /opt/stack/secure-sequentier
+      dockerfile: Web/Dockerfile
+    container_name: secure-sequentier-frontend
+    restart: unless-stopped
+    ports:
+      - "5188:5188"  # Frontend Web Interface
+    depends_on:
+      secure-sequentier-backend:
+        condition: service_healthy
+    volumes:
+      - /opt/stack/data/secure-sequentier/queue:/app/data/queue:ro
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5188
+      - BACKEND_API_URL=http://secure-sequentier-backend:9999
+    networks:
+      - proxy-net
+      - data-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5188 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+

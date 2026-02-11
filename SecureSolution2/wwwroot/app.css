@@ -1,0 +1,32 @@
+body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+}
+
+.sidebar {
+    float: left;
+    width: 200px;
+    height: 100vh;
+    background: #222;
+    color: #fff;
+}
+
+    .sidebar ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .sidebar a {
+        display: block;
+        padding: 8px 12px;
+        color: #fff;
+        text-decoration: none;
+    }
+
+        .sidebar a.active, .sidebar a:hover {
+            background: #444;
+        }
+
+.main {
+    margin-left: 200px;
+}

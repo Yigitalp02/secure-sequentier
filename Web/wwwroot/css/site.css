@@ -1,0 +1,40 @@
+﻿html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+/*── Batch-status colours (used on Queue page) ──────────*/
+.st-pending {
+    color: #6c757d;
+}
+/* grey   */
+.st-processing {
+    color: #fd7e14;
+}
+/* orange */
+.st-completed {
+    color: #28a745;
+}
+/* green  */
+.st-failed {
+    color: #dc3545;
+}
+/* red    */

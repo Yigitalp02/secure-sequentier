@@ -1,0 +1,17 @@
+# Example Cloudflare Tunnel Configuration
+# Add this to your existing Cloudflare Tunnel config
+# Usually located at: /opt/stack/config/cloudflared/config.yml
+
+tunnel: <your-tunnel-id>
+credentials-file: /opt/stack/config/cloudflared/credentials.json
+
+ingress:
+  # ... your existing ingress rules ...
+  
+  # Secure Sequentier - File Processing System
+  - hostname: secure.ybilgin.com
+    service: http://localhost:5188
+  
+  # Catch-all rule (MUST be last)
+  - service: http_status:404
+

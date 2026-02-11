@@ -59,7 +59,7 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "🐳 Building Docker images..."
     cd "$SCRIPT_DIR"
-    docker-compose -f docker-compose.production.yml build
+    sudo docker compose -f docker-compose.production.yml build
     echo "✓ Docker images built successfully"
 fi
 
@@ -70,10 +70,10 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "🚀 Starting containers..."
     cd "$SCRIPT_DIR"
-    docker-compose -f docker-compose.production.yml up -d
+    sudo docker compose -f docker-compose.production.yml up -d
     echo "✓ Containers started"
     echo ""
-    echo "View logs with: docker-compose -f docker-compose.production.yml logs -f"
+    echo "View logs with: sudo docker compose -f docker-compose.production.yml logs -f"
 fi
 
 echo ""
@@ -89,10 +89,10 @@ echo "2. Configure Cloudflare Tunnel (see DEPLOYMENT.md)"
 echo "3. Access at: https://secure.ybilgin.com"
 echo ""
 echo "Useful commands:"
-echo "  View logs:    docker-compose -f docker-compose.production.yml logs -f"
-echo "  Restart:      docker-compose -f docker-compose.production.yml restart"
-echo "  Stop:         docker-compose -f docker-compose.production.yml down"
-echo "  Update:       git pull && docker-compose -f docker-compose.production.yml up -d --build"
+echo "  View logs:    sudo docker compose -f docker-compose.production.yml logs -f"
+echo "  Restart:      sudo docker compose -f docker-compose.production.yml restart"
+echo "  Stop:         sudo docker compose -f docker-compose.production.yml down"
+echo "  Update:       git pull && sudo docker compose -f docker-compose.production.yml up -d --build"
 echo ""
 echo "💾 Note: All data is stored on SSD (/opt/stack/) for fast performance."
 echo "   For backups, consider copying to HDD: cp -r $DATA_DIR /mnt/data/backups/"

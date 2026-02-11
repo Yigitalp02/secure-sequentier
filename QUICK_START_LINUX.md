@@ -54,7 +54,7 @@ chmod +x /opt/stack/data/secure-sequentier/subsystems/SignerApp/SignerApp
 
 ```bash
 cd /opt/stack/secure-sequentier
-docker-compose -f docker-compose.production.yml up -d
+sudo docker compose -f docker-compose.production.yml up -d
 ```
 
 ## Step 5: Configure Cloudflare Tunnel
@@ -102,24 +102,24 @@ Access via: `https://secure.ybilgin.com`
 
 ```bash
 # View logs
-docker-compose -f docker-compose.production.yml logs -f
+sudo docker compose -f docker-compose.production.yml logs -f
 
 # Restart
-docker-compose -f docker-compose.production.yml restart
+sudo docker compose -f docker-compose.production.yml restart
 
 # Stop
-docker-compose -f docker-compose.production.yml down
+sudo docker compose -f docker-compose.production.yml down
 
 # Update
 cd /opt/stack/secure-sequentier
 git pull
-docker-compose -f docker-compose.production.yml up -d --build
+sudo docker compose -f docker-compose.production.yml up -d --build
 ```
 
 ## Troubleshooting
 
 **Containers won't start:**
-- Check logs: `docker-compose -f docker-compose.production.yml logs`
+- Check logs: `sudo docker compose -f docker-compose.production.yml logs`
 - Verify paths exist: `ls -la /opt/stack/config/secure-sequentier/`
 - Check ports: `sudo netstat -tulpn | grep -E '9999|5188'`
 

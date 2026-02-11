@@ -13,16 +13,18 @@ cd secure-sequentier
 ## Step 2: Create Directory Structure
 
 ```bash
-# Create config directory
+# Create config directory (if it doesn't exist)
 sudo mkdir -p /opt/stack/config/secure-sequentier
 
-# Create data directories
+# Create data directories (if they don't exist)
 sudo mkdir -p /opt/stack/data/secure-sequentier/{watch,queue,processed,logs,subsystems}
 
-# Set permissions
+# Set permissions (only works if directories exist)
 sudo chown -R bilgin:bilgin /opt/stack/config/secure-sequentier
 sudo chown -R bilgin:bilgin /opt/stack/data/secure-sequentier
 ```
+
+**Note**: If you get "No such file or directory" error, make sure you ran the `mkdir -p` commands first. The `-p` flag creates parent directories if they don't exist.
 
 ## Step 3: Configure Application
 
@@ -129,14 +131,14 @@ Add the Secure Sequentier services. You can copy the content from `docker-compos
 
 ```bash
 cd /opt/stack
-docker-compose build secure-sequentier-backend secure-sequentier-frontend
-docker-compose up -d secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose build secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose up -d secure-sequentier-backend secure-sequentier-frontend
 ```
 
 Or rebuild everything:
 
 ```bash
-docker-compose up -d --build
+sudo docker compose up -d --build
 ```
 
 ## Step 7: Configure Cloudflare Tunnel
@@ -194,20 +196,20 @@ Edit `/home/bilgin/homepage/config/homepage/services.yaml`:
 
 ```bash
 # View logs
-docker-compose logs -f secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose logs -f secure-sequentier-backend secure-sequentier-frontend
 
 # Restart services
-docker-compose restart secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose restart secure-sequentier-backend secure-sequentier-frontend
 
 # Stop services
-docker-compose stop secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose stop secure-sequentier-backend secure-sequentier-frontend
 
 # Update application
 cd /opt/stack/secure-sequentier
 git pull
 cd /opt/stack
-docker-compose build secure-sequentier-backend secure-sequentier-frontend
-docker-compose up -d secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose build secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose up -d secure-sequentier-backend secure-sequentier-frontend
 ```
 
 ## Ports Used
@@ -226,8 +228,8 @@ Secure Sequentier is connected to:
 **Containers won't start:**
 ```bash
 # Check logs
-docker-compose logs secure-sequentier-backend
-docker-compose logs secure-sequentier-frontend
+sudo docker compose logs secure-sequentier-backend
+sudo docker compose logs secure-sequentier-frontend
 
 # Verify paths exist
 ls -la /opt/stack/config/secure-sequentier/
@@ -235,13 +237,13 @@ ls -la /opt/stack/data/secure-sequentier/
 ```
 
 **Can't access via domain:**
-- Verify Cloudflare Tunnel is running: `docker ps | grep cloudflared`
+- Verify Cloudflare Tunnel is running: `sudo docker ps | grep cloudflared`
 - Check tunnel config syntax
 - Verify DNS: `dig secure.ybilgin.com`
 
 **Build fails:**
 - Ensure you're in `/opt/stack` directory
-- Check Docker has enough space: `docker system df`
+- Check Docker has enough space: `sudo docker system df`
 - Verify .NET SDK is available in build context (it's in the Dockerfile)
 
 ## Notes

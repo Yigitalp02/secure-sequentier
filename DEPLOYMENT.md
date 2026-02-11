@@ -190,13 +190,13 @@ networks:
 
 ```bash
 cd /opt/stack/secure-sequentier
-docker-compose -f docker-compose.production.yml build
-docker-compose -f docker-compose.production.yml up -d
+sudo docker compose -f docker-compose.production.yml build
+sudo docker compose -f docker-compose.production.yml up -d
 ```
 
 Check logs:
 ```bash
-docker-compose logs -f
+sudo docker compose -f docker-compose.production.yml logs -f
 ```
 
 ## Step 7: Configure Cloudflare Tunnel
@@ -270,21 +270,21 @@ Add to your Homepage services configuration (`/opt/stack/config/homepage/service
 
 ### View Logs
 ```bash
-docker-compose logs -f backend
-docker-compose logs -f frontend
+sudo docker compose -f docker-compose.production.yml logs -f backend
+sudo docker compose -f docker-compose.production.yml logs -f frontend
 ```
 
 ### Restart Services
 ```bash
-docker-compose restart
+sudo docker compose -f docker-compose.production.yml restart
 ```
 
 ### Update Application
 ```bash
 cd /opt/stack/secure-sequentier
 git pull
-docker-compose -f docker-compose.production.yml build
-docker-compose -f docker-compose.production.yml up -d
+sudo docker compose -f docker-compose.production.yml build
+sudo docker compose -f docker-compose.production.yml up -d
 ```
 
 ### Backup Data
@@ -299,7 +299,7 @@ tar -czf /mnt/data/backups/secure-sequentier-data-backup-$(date +%Y%m%d).tar.gz 
 ## Troubleshooting
 
 ### Containers won't start
-- Check logs: `docker-compose logs`
+- Check logs: `sudo docker compose -f docker-compose.production.yml logs`
 - Verify paths exist and have correct permissions
 - Ensure ports 9999 and 5188 are not in use: `sudo netstat -tulpn | grep -E '9999|5188'`
 

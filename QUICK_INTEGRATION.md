@@ -15,9 +15,15 @@ This is a quick reference for adding Secure Sequentier to your `/opt/stack/docke
 cd /opt/stack
 git clone <your-repo-url> secure-sequentier
 
-# 2. Create directories
+# 2. Create directories (create them first!)
 sudo mkdir -p /opt/stack/config/secure-sequentier
-sudo mkdir -p /opt/stack/data/secure-sequentier/{watch,queue,processed,logs,subsystems}
+sudo mkdir -p /opt/stack/data/secure-sequentier/watch
+sudo mkdir -p /opt/stack/data/secure-sequentier/queue
+sudo mkdir -p /opt/stack/data/secure-sequentier/processed
+sudo mkdir -p /opt/stack/data/secure-sequentier/logs
+sudo mkdir -p /opt/stack/data/secure-sequentier/subsystems
+
+# 3. Set permissions (after directories are created)
 sudo chown -R bilgin:bilgin /opt/stack/config/secure-sequentier
 sudo chown -R bilgin:bilgin /opt/stack/data/secure-sequentier
 
@@ -101,8 +107,8 @@ Add these services to your `docker-compose.yml` (copy from `docker-compose.stack
 ```bash
 # 5. Build and start
 cd /opt/stack
-docker-compose build secure-sequentier-backend secure-sequentier-frontend
-docker-compose up -d secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose build secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose up -d secure-sequentier-backend secure-sequentier-frontend
 
 # 6. Configure Cloudflare Tunnel
 sudo nano /home/bilgin/homepage/config/cloudflared/config.yml
@@ -124,7 +130,7 @@ docker-compose restart cloudflared
 
 ```bash
 # Check containers
-docker ps | grep secure-sequentier
+sudo docker ps | grep secure-sequentier
 
 # Test locally
 curl http://192.168.50.100:5188
@@ -140,8 +146,8 @@ curl http://192.168.50.100:9999/api/health
 cd /opt/stack/secure-sequentier
 git pull
 cd /opt/stack
-docker-compose build secure-sequentier-backend secure-sequentier-frontend
-docker-compose up -d secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose build secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose up -d secure-sequentier-backend secure-sequentier-frontend
 ```
 
 Done! 🎉

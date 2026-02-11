@@ -12,10 +12,6 @@
     "advanced-signer": {
       "ExecutablePath": "/app/subsystems/AdvancedSignerApp/AdvancedSignerApp",
       "OutputDirectory": "/app/data/processed/{USER}/advanced-signatures"
-    },
-    "sub-system1": {
-      "ExecutablePath": "/app/subsystems/SuccessApp/DummySuccessApp",
-      "OutputDirectory": "/app/data/processed/{USER}/sub-system1"
     }
   }
 }

@@ -108,6 +108,13 @@ namespace SecureSolution2.Services
 
                         try
                         {
+                            // Verify executable exists before trying to run it
+                            if (!File.Exists(map.ExecutablePath))
+                            {
+                                _log.Error("Executable not found: {ExecutablePath}", map.ExecutablePath);
+                                break; // No point retrying if exe doesn't exist
+                            }
+
                             _log.Information("Executing: {ExecutablePath} with args: \"{InputPath}\" \"{OutputDir}\"", 
                                 map.ExecutablePath, file.Path, batchDir);
                             success = await RunWorker(
@@ -120,6 +127,10 @@ namespace SecureSolution2.Services
                         catch (OperationCanceledException)
                         {
                             _log.Warning("Timeout on file {FilePath}", file.Path);
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.Error(ex, "Error processing file {FilePath}", file.Path);
                         }
 
                         file.Status = success ? JobStatus.Completed : JobStatus.Failed;
@@ -148,7 +159,6 @@ namespace SecureSolution2.Services
             _hub.Clients.All.SendAsync("ReceiveJobUpdate", job);
         }
 
-        private static readonly Random _rand = new();
         private static async Task<bool> RunWorker(
             string exe,
             string input,
@@ -156,9 +166,6 @@ namespace SecureSolution2.Services
             CancellationToken ct,
             SerilogLogger log)
         {
-            // simulate warm-up
-            await Task.Delay(_rand.Next(5, 16) * 1000, ct);
-
             var psi = new ProcessStartInfo
             {
                 FileName = exe,

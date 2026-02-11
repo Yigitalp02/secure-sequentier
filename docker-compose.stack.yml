@@ -18,7 +18,6 @@
       - /opt/stack/data/secure-sequentier/processed:/app/data/processed
       - /opt/stack/data/secure-sequentier/logs:/app/data/logs
       - /opt/stack/config/secure-sequentier/DefaultConfig.json:/app/DefaultConfig.json:ro
-      - /opt/stack/data/secure-sequentier/subsystems:/app/subsystems:ro
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:9999

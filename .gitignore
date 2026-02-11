@@ -147,4 +147,7 @@ secrets.json
 
 # Data directories (created at runtime)
 data/
-subsystems/
+
+# Ignore built subsystem binaries but keep source code
+Subsystems/**/bin/
+Subsystems/**/obj/

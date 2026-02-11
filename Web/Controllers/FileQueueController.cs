@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.DirectoryServices.AccountManagement;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Web.Models;
@@ -24,6 +23,7 @@ namespace Web.Controllers
         };
 
         private const string SessionProfileKey = "ActiveProfile";
+        private const string PersistentCookieName = "SecureSequentierUserId";
 
         public FileQueueController(
             ISecureSequentialApi api,
@@ -90,32 +90,63 @@ namespace Web.Controllers
         // ─────────── bootstrap a new user session ───────────
         private string EnsureCurrentProfile()
         {
-            // 1) try Windows display-name
-            string? display = null;
-            if (OperatingSystem.IsWindows())
+            string userId;
+
+            // 1) Check for persistent cookie (works across sessions/restarts)
+            if (HttpContext.Request.Cookies.TryGetValue(PersistentCookieName, out var cookieId)
+                && !string.IsNullOrWhiteSpace(cookieId))
             {
-                try { display = UserPrincipal.Current?.DisplayName; }
-                catch { }
+                userId = cookieId;
+            }
+            else
+            {
+                // 2) On Windows (local dev), try to use the Windows display name
+                string? windowsName = null;
+                if (OperatingSystem.IsWindows())
+                {
+                    try
+                    {
+                        windowsName = System.DirectoryServices.AccountManagement
+                            .UserPrincipal.Current?.DisplayName;
+                    }
+                    catch { }
+
+                    // Fallback to system username
+                    windowsName ??= HttpContext.User.Identity?.Name?.Split('\\').Last()
+                                    ?? Environment.UserName;
+                }
+
+                if (!string.IsNullOrWhiteSpace(windowsName))
+                {
+                    // Use sanitized Windows name
+                    userId = windowsName
+                        .Replace(':', '_').Replace('\\', '_').Replace('/', '_').Trim();
+                }
+                else
+                {
+                    // 3) Generate a random anonymous ID for non-Windows (Docker/Linux)
+                    userId = "user-" + Guid.NewGuid().ToString("N")[..8];
+                }
+
+                // Store in persistent cookie (365 days)
+                HttpContext.Response.Cookies.Append(PersistentCookieName, userId, new CookieOptions
+                {
+                    Expires = DateTimeOffset.UtcNow.AddDays(365),
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Lax,
+                    IsEssential = true
+                });
             }
 
-            // 2) fallback alias
-            var alias = HttpContext.User.Identity?.Name?.Split('\\').Last()
-                        ?? Environment.UserName
-                        ?? "guest";
+            if (ActiveProfile != userId)
+                ActiveProfile = userId;
 
-            // 3) sanitize
-            var folder = (display ?? alias)
-                         .Replace(':', '_').Replace('\\', '_').Replace('/', '_').Trim();
-
-            if (ActiveProfile != folder)
-                ActiveProfile = folder;
-
-            // 4) proactively create today’s file
+            // Proactively create today's queue file
             var today = DateTime.Now.ToString("yyyy-MM-dd");
-            GetQueuePathForDate(folder, today);
+            GetQueuePathForDate(userId, today);
 
-            ViewBag.DisplayName = display ?? alias;
-            return folder;
+            ViewBag.DisplayName = userId;
+            return userId;
         }
 
         private string DefaultConfigPath =>

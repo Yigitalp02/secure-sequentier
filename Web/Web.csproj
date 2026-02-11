@@ -16,12 +16,4 @@
     <ProjectReference Include="..\SecureSolution2\SecureSolution2.csproj" />
   </ItemGroup>
 
-  <!-- Exclude SecureSolution2/appsettings.json from publish to avoid conflict -->
-  <Target Name="ExcludeReferencedAppSettings" BeforeTargets="GetCopyToPublishDirectoryItems">
-    <ItemGroup>
-      <_ItemsToRemove Include="@(ContentWithTargetPath)" Condition="'%(RelativePath)' != '' AND '%(RelativePath)' == 'SecureSolution2/appsettings.json'" />
-      <ContentWithTargetPath Remove="@(_ItemsToRemove)" />
-    </ItemGroup>
-  </Target>
-
 </Project>

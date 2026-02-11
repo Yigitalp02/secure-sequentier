@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Web.Models;
@@ -312,8 +313,38 @@ namespace Web.Controllers
                 return View();
             }
 
-            var resultJson = await _api.VerifyAsync(file, hash, algorithm ?? "SHA256");
-            ViewBag.Result = resultJson;
+            // Hash directly in the frontend — no need to re-upload to backend
+            var expectedHash = hash.Trim().ToLower().Replace(" ", "");
+            var algo = (algorithm ?? "SHA256").ToUpper();
+
+            byte[] fileBytes;
+            using (var ms = new MemoryStream())
+            {
+                await file.CopyToAsync(ms);
+                fileBytes = ms.ToArray();
+            }
+
+            using HashAlgorithm hasher = algo switch
+            {
+                "SHA512" => SHA512.Create(),
+                "MD5" => MD5.Create(),
+                _ => SHA256.Create()
+            };
+
+            var actualHash = Convert.ToHexString(hasher.ComputeHash(fileBytes)).ToLower();
+            var match = actualHash == expectedHash;
+
+            var result = JsonSerializer.Serialize(new
+            {
+                match,
+                actualHash,
+                expectedHash,
+                algorithm = algo,
+                fileName = file.FileName,
+                fileSize = file.Length
+            });
+
+            ViewBag.Result = result;
             return View();
         }
 
@@ -336,8 +367,29 @@ namespace Web.Controllers
                 return View();
             }
 
-            var resultJson = await _api.HashAsync(file);
-            ViewBag.Result = resultJson;
+            // Hash directly in the frontend — no need to re-upload to backend
+            byte[] fileBytes;
+            using (var ms = new MemoryStream())
+            {
+                await file.CopyToAsync(ms);
+                fileBytes = ms.ToArray();
+            }
+
+            var sha256 = Convert.ToHexString(SHA256.HashData(fileBytes)).ToLower();
+            var sha512 = Convert.ToHexString(SHA512.HashData(fileBytes)).ToLower();
+            var md5 = Convert.ToHexString(MD5.HashData(fileBytes)).ToLower();
+
+            var result = JsonSerializer.Serialize(new
+            {
+                fileName = file.FileName,
+                fileSize = file.Length,
+                sha256,
+                sha512,
+                md5,
+                timestamp = DateTime.UtcNow
+            });
+
+            ViewBag.Result = result;
             return View();
         }
 

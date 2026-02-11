@@ -27,32 +27,43 @@
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="FileQueue" asp-action="Index">
-                                <i class="bi bi-upload me-1"></i> Sign Files
+                                <i class="bi bi-upload me-1"></i> <span data-i18n="nav.signFiles">Sign Files</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="FileQueue" asp-action="Verify">
-                                <i class="bi bi-patch-check me-1"></i> Verify
+                                <i class="bi bi-patch-check me-1"></i> <span data-i18n="nav.verify">Verify</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="FileQueue" asp-action="HashCalculator">
-                                <i class="bi bi-hash me-1"></i> Hash Calculator
+                                <i class="bi bi-hash me-1"></i> <span data-i18n="nav.hash">Hash Calculator</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="FileQueue" asp-action="History">
-                                <i class="bi bi-clock-history me-1"></i> History
+                                <i class="bi bi-clock-history me-1"></i> <span data-i18n="nav.history">History</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="FileQueue" asp-action="About">
-                                <i class="bi bi-info-circle me-1"></i> About
+                                <i class="bi bi-info-circle me-1"></i> <span data-i18n="nav.about">About</span>
                             </a>
                         </li>
                     </ul>
-                    <div class="d-flex align-items-center">
-                        <button id="themeToggle" class="btn btn-outline-secondary btn-sm me-2" title="Toggle dark mode">
+                    <div class="d-flex align-items-center gap-2">
+                        <!-- Language Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
+                                    id="langDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-globe me-1"></i> <span id="currentLangLabel">EN</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown" id="langMenu">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                        <!-- Dark mode toggle -->
+                        <button id="themeToggle" class="btn btn-outline-secondary btn-sm" title="Toggle dark mode">
                             <i class="bi bi-moon-fill" id="themeIcon"></i>
                         </button>
                     </div>
@@ -76,6 +87,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/i18n.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         // ─── Dark mode toggle ───
@@ -102,6 +114,38 @@
                     : 'bi bi-moon-fill';
             }
         })();
+
+        // ─── Language dropdown ───
+        (function() {
+            var langs = I18N.getLangs();
+            var menu = document.getElementById('langMenu');
+            var label = document.getElementById('currentLangLabel');
+            var current = I18N.getLang();
+
+            // Set label
+            label.textContent = current.toUpperCase();
+
+            // Build dropdown items
+            Object.keys(langs).forEach(function(code) {
+                var li = document.createElement('li');
+                var a = document.createElement('a');
+                a.className = 'dropdown-item' + (code === current ? ' active' : '');
+                a.href = '#';
+                a.textContent = langs[code].flag + ' ' + langs[code].name;
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    I18N.setLang(code);
+                    label.textContent = code.toUpperCase();
+                    // Update active state
+                    menu.querySelectorAll('.dropdown-item').forEach(function(item) {
+                        item.classList.remove('active');
+                    });
+                    a.classList.add('active');
+                });
+                li.appendChild(a);
+                menu.appendChild(li);
+            });
+        })();
     </script>
     <script>
         $(function(){
@@ -113,6 +157,7 @@
             $('#historyContainer')
               .load(window.location.href + ' #historyContainer > *',()=>{
                 open.forEach(id=>$('#'+id).collapse('show'));
+                I18N.apply();
               });
           }
           setInterval(refreshHistory,5000);

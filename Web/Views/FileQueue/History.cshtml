@@ -9,7 +9,7 @@
                       ?? DateTime.Now.ToString("yyyy-MM-dd");
 
     // 2) Helper to emit the header <a>…</a> with ▲/▼ and preserve 'date'
-    Func<string, string, string> SortLink = (label, field) =>
+    Func<string, string, string, string> SortLink = (label, field, i18nKey) =>
     {
         var isCurrent = field == currentField;
         var nextDir = isCurrent && currentDir == "asc" ? "desc" : "asc";
@@ -22,10 +22,10 @@
             pageSize = ViewBag.PageSize,
             sortField = field,
             sortDir = nextDir,
-            date = currentDate      // <-- include date here
+            date = currentDate
         });
         return $@"<a href=""{url}"">
-                    {label}
+                    <span data-i18n=""{i18nKey}"">{label}</span>
                     <span class=""sort-arrow"">{arrow}</span>
                   </a>";
     };
@@ -48,7 +48,7 @@
         </style>
     }
 
-    <h2>Run History</h2>
+    <h2 data-i18n="hist.title">Run History</h2>
 
     @{
     // Grab the list of dates and the currently selected date from ViewBag
@@ -62,7 +62,7 @@
         <!-- runs-per-page + preserve sorting -->
         <form method="get" class="row g-2 align-items-center mb-3">
             <div class="col-auto">
-                <label for="dateSelect" class="col-form-label">Date:</label>
+                <label for="dateSelect" class="col-form-label" data-i18n="hist.date">Date:</label>
             </div>
             <div class="col-auto">
                 <select id="dateSelect" name="date" class="form-select"
@@ -87,13 +87,13 @@
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th>@Html.Raw(SortLink("Run ID", "RunId"))</th>
-                    <th>User</th>
-                    <th>@Html.Raw(SortLink("Status", "Status"))</th>
-                    <th>@Html.Raw(SortLink("Started At", "StartedAt"))</th>
-                    <th>@Html.Raw(SortLink("Retries", "Retries"))</th>
-                    <th></th>              @* collapse toggle *@
-                    <th>Live Status</th>   @* new column *@
+                    <th>@Html.Raw(SortLink("Run ID", "RunId", "hist.runId"))</th>
+                    <th data-i18n="hist.user">User</th>
+                    <th>@Html.Raw(SortLink("Status", "Status", "hist.status"))</th>
+                    <th>@Html.Raw(SortLink("Started At", "StartedAt", "hist.startedAt"))</th>
+                    <th>@Html.Raw(SortLink("Retries", "Retries", "hist.retries"))</th>
+                    <th></th>
+                    <th data-i18n="hist.liveStatus">Live Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -118,7 +118,8 @@
                                 data-bs-toggle="collapse"
                                 data-bs-target="#files-@run.Id"
                                 aria-expanded="false"
-                                aria-controls="files-@run.Id">
+                                aria-controls="files-@run.Id"
+                                data-i18n="hist.details">
                             Details
                         </button>
                     </td>
@@ -126,7 +127,8 @@
                         <a asp-controller="FileQueue"
                            asp-action="Queue"
                            asp-route-runId="@run.RunId"
-                           class="btn btn-sm btn-primary">
+                           class="btn btn-sm btn-primary"
+                           data-i18n="hist.viewStatus">
                             View Status
                         </a>
                     </td>
@@ -136,11 +138,11 @@
                         <table class="table table-sm mb-0">
                             <thead>
                                 <tr>
-                                    <th>File</th>
-                                    <th>Status</th>
-                                    <th>Started</th>
-                                    <th>Finished</th>
-                                    <th>Retries</th>
+                                    <th data-i18n="hist.file">File</th>
+                                    <th data-i18n="hist.status">Status</th>
+                                    <th data-i18n="hist.startedAt">Started</th>
+                                    <th data-i18n="hist.finished">Finished</th>
+                                    <th data-i18n="hist.retries">Retries</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -174,13 +176,15 @@
             <ul class="pagination">
                 <li class="page-item @(ViewBag.Page == 1 ? "disabled" : "")">
                     <a class="page-link"
-                       href="@Url.Action("History", new { page = 1, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })">
+                       href="@Url.Action("History", new { page = 1, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })"
+                       data-i18n="hist.first">
                         « First
                     </a>
                 </li>
                 <li class="page-item @(ViewBag.Page <= 1 ? "disabled" : "")">
                     <a class="page-link"
-                       href="@Url.Action("History", new { page = ViewBag.Page - 1, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })">
+                       href="@Url.Action("History", new { page = ViewBag.Page - 1, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })"
+                       data-i18n="hist.prev">
                         ‹ Prev
                     </a>
                 </li>
@@ -195,13 +199,15 @@
             }
                 <li class="page-item @(ViewBag.Page >= (int)ViewBag.TotalPages ? "disabled" : "")">
                     <a class="page-link"
-                       href="@Url.Action("History", new { page = ViewBag.Page + 1, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })">
+                       href="@Url.Action("History", new { page = ViewBag.Page + 1, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })"
+                       data-i18n="hist.next">
                         Next ›
                     </a>
                 </li>
                 <li class="page-item @(ViewBag.Page == (int)ViewBag.TotalPages ? "disabled" : "")">
                     <a class="page-link"
-                       href="@Url.Action("History", new { page = ViewBag.TotalPages, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })">
+                       href="@Url.Action("History", new { page = ViewBag.TotalPages, pageSize = ViewBag.PageSize, sortField = currentField, sortDir = currentDir })"
+                       data-i18n="hist.last">
                         Last »
                     </a>
                 </li>

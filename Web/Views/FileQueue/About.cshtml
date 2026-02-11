@@ -6,22 +6,22 @@
     <!-- Header -->
     <div class="text-center mb-5">
         <i class="bi bi-shield-lock-fill display-3 text-primary"></i>
-        <h1 class="mt-3">About Secure Sequentier</h1>
-        <p class="lead text-muted">A web-based file signing and verification platform</p>
+        <h1 class="mt-3" data-i18n="about.title">About Secure Sequentier</h1>
+        <p class="lead text-muted" data-i18n="about.subtitle">A web-based file signing and verification platform</p>
     </div>
 
     <!-- What It Does -->
     <div class="row justify-content-center mb-5">
         <div class="col-lg-8">
             <div class="card shadow-sm rounded-4 p-4">
-                <h4><i class="bi bi-question-circle me-2 text-primary"></i>What is Secure Sequentier?</h4>
-                <p>
+                <h4><i class="bi bi-question-circle me-2 text-primary"></i><span data-i18n="about.whatTitle">What is Secure Sequentier?</span></h4>
+                <p data-i18n="about.whatP1">
                     Secure Sequentier is a web-based application for <strong>digitally signing</strong>,
                     <strong>hashing</strong>, and <strong>verifying</strong> files using industry-standard
                     cryptographic algorithms. It processes files through configurable subsystem applications
                     that generate signatures, hashes, and detailed reports.
                 </p>
-                <p class="mb-0">
+                <p class="mb-0" data-i18n="about.whatP2">
                     Built with <strong>ASP.NET Core</strong> on the backend and a modern MVC frontend,
                     the application supports batch processing with real-time status updates via <strong>SignalR</strong>,
                     automatic retry logic, configurable timeouts, and downloadable output packages.
@@ -34,14 +34,14 @@
     <div class="row justify-content-center mb-5">
         <div class="col-lg-8">
             <h3 class="text-center mb-4">
-                <i class="bi bi-diagram-3 me-2"></i>How It Works
+                <i class="bi bi-diagram-3 me-2"></i><span data-i18n="about.howTitle">How It Works</span>
             </h3>
 
             <div class="architecture-step">
                 <div class="step-number bg-primary text-white">1</div>
                 <div class="card shadow-sm rounded-3 p-3">
-                    <h6 class="mb-1"><i class="bi bi-upload text-primary me-2"></i>File Upload</h6>
-                    <p class="text-muted small mb-0">
+                    <h6 class="mb-1"><i class="bi bi-upload text-primary me-2"></i><span data-i18n="about.step1Title">File Upload</span></h6>
+                    <p class="text-muted small mb-0" data-i18n="about.step1Desc">
                         User uploads one or more files through the web interface. Files are sent to the backend
                         API and stored in a <strong>watch directory</strong> organized by user and target app.
                     </p>
@@ -51,8 +51,8 @@
             <div class="architecture-step">
                 <div class="step-number bg-warning text-dark">2</div>
                 <div class="card shadow-sm rounded-3 p-3">
-                    <h6 class="mb-1"><i class="bi bi-collection text-warning me-2"></i>Queue & Orchestration</h6>
-                    <p class="text-muted small mb-0">
+                    <h6 class="mb-1"><i class="bi bi-collection text-warning me-2"></i><span data-i18n="about.step2Title">Queue &amp; Orchestration</span></h6>
+                    <p class="text-muted small mb-0" data-i18n="about.step2Desc">
                         The <strong>Orchestrator Background Service</strong> monitors the queue. When a job is pending,
                         it dequeues it, spawns the configured subsystem executable, and passes input/output paths as arguments.
                     </p>
@@ -62,16 +62,15 @@
             <div class="architecture-step">
                 <div class="step-number bg-info text-white">3</div>
                 <div class="card shadow-sm rounded-3 p-3">
-                    <h6 class="mb-1"><i class="bi bi-cpu text-info me-2"></i>Subsystem Processing</h6>
-                    <p class="text-muted small mb-0">
-                        The signer apps (<strong>SignerApp</strong> or <strong>AdvancedSignerApp</strong>) read
-                        the input file, compute cryptographic hashes (SHA-256, SHA-512, MD5), and generate:
+                    <h6 class="mb-1"><i class="bi bi-cpu text-info me-2"></i><span data-i18n="about.step3Title">Subsystem Processing</span></h6>
+                    <p class="text-muted small mb-0" data-i18n="about.step3Desc">
+                        The signer apps read the input file, compute cryptographic hashes (SHA-256, SHA-512, MD5), and generate:
                     </p>
                     <ul class="text-muted small mb-0 mt-1">
-                        <li><strong>Signature file</strong> (.sig.json) — structured signature with algorithm details</li>
-                        <li><strong>Hash file</strong> (.hash.txt) — plain-text hash values</li>
-                        <li><strong>Signed copy</strong> — the original file with appended hash marker</li>
-                        <li><strong>Report</strong> (.report.txt) — detailed processing report with timestamps</li>
+                        <li data-i18n="about.step3Sig"><strong>Signature file</strong> (.sig.json) — structured signature with algorithm details</li>
+                        <li data-i18n="about.step3Hash"><strong>Hash file</strong> (.hash.txt) — plain-text hash values</li>
+                        <li data-i18n="about.step3Signed"><strong>Signed copy</strong> — the original file with appended hash marker</li>
+                        <li data-i18n="about.step3Report"><strong>Report</strong> (.report.txt) — detailed processing report with timestamps</li>
                     </ul>
                 </div>
             </div>
@@ -79,8 +78,8 @@
             <div class="architecture-step">
                 <div class="step-number bg-success text-white">4</div>
                 <div class="card shadow-sm rounded-3 p-3">
-                    <h6 class="mb-1"><i class="bi bi-check-circle text-success me-2"></i>Results & Download</h6>
-                    <p class="text-muted small mb-0">
+                    <h6 class="mb-1"><i class="bi bi-check-circle text-success me-2"></i><span data-i18n="about.step4Title">Results &amp; Download</span></h6>
+                    <p class="text-muted small mb-0" data-i18n="about.step4Desc">
                         Once processing completes, results are stored in the <strong>processed directory</strong>.
                         Users can view real-time status, download all outputs as a ZIP, or view a signature certificate.
                     </p>
@@ -93,13 +92,13 @@
     <div class="row justify-content-center mb-5">
         <div class="col-lg-8">
             <h3 class="text-center mb-4">
-                <i class="bi bi-lock me-2"></i>Algorithms Used
+                <i class="bi bi-lock me-2"></i><span data-i18n="about.algoTitle">Algorithms Used</span>
             </h3>
             <div class="row g-3">
                 <div class="col-md-4">
                     <div class="card shadow-sm rounded-3 text-center p-3 h-100">
                         <h5 class="text-primary">SHA-256</h5>
-                        <p class="text-muted small mb-0">
+                        <p class="text-muted small mb-0" data-i18n="about.sha256Desc">
                             256-bit hash from the SHA-2 family. Used in TLS, SSL, Bitcoin, and digital signatures.
                             Produces a 64-character hex string.
                         </p>
@@ -108,7 +107,7 @@
                 <div class="col-md-4">
                     <div class="card shadow-sm rounded-3 text-center p-3 h-100">
                         <h5 class="text-success">SHA-512</h5>
-                        <p class="text-muted small mb-0">
+                        <p class="text-muted small mb-0" data-i18n="about.sha512Desc">
                             512-bit hash offering higher security. Produces a 128-character hex string.
                             Often used for password hashing and integrity verification.
                         </p>
@@ -117,7 +116,7 @@
                 <div class="col-md-4">
                     <div class="card shadow-sm rounded-3 text-center p-3 h-100">
                         <h5 class="text-warning">MD5</h5>
-                        <p class="text-muted small mb-0">
+                        <p class="text-muted small mb-0" data-i18n="about.md5Desc">
                             128-bit hash for quick checksums. Produces a 32-character hex string.
                             Not recommended for security, but widely used for file integrity checks.
                         </p>
@@ -131,7 +130,7 @@
     <div class="row justify-content-center mb-5">
         <div class="col-lg-8">
             <h3 class="text-center mb-4">
-                <i class="bi bi-stack me-2"></i>Technology Stack
+                <i class="bi bi-stack me-2"></i><span data-i18n="about.techTitle">Technology Stack</span>
             </h3>
             <div class="row g-3">
                 <div class="col-6 col-md-3">
@@ -192,11 +191,10 @@
             <div class="card shadow-sm rounded-4 p-4 text-center">
                 <i class="bi bi-person-circle display-5 text-muted"></i>
                 <h5 class="mt-2">Yiğit Alp Bilgin</h5>
-                <p class="text-muted small mb-0">
+                <p class="text-muted small mb-0" data-i18n="about.author">
                     Developed as an internship project. Deployed on a home server via Docker and Cloudflare Tunnel.
                 </p>
             </div>
         </div>
     </div>
 </div>
-

@@ -7,34 +7,35 @@
         <div class="col-lg-8">
             <div class="text-center mb-4">
                 <i class="bi bi-hash display-4 text-info"></i>
-                <h2 class="mt-2">Hash Calculator</h2>
+                <h2 class="mt-2" data-i18n="hash.title">Hash Calculator</h2>
                 <p class="text-muted">
-                    Drop a file and instantly get its SHA-256, SHA-512, and MD5 hashes.
-                    <br /><strong>Your file never leaves your browser</strong> — all hashing is done locally.
+                    <span data-i18n="hash.desc">Drop a file and instantly get its SHA-256, SHA-512, and MD5 hashes.</span>
+                    <br /><strong data-i18n="hash.localNote">Your file never leaves your browser</strong> —
+                    <span data-i18n="hash.localNote2">all hashing is done locally.</span>
                 </p>
             </div>
 
             <div class="card shadow-sm rounded-4">
                 <div class="card-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Select File</label>
+                        <label class="form-label fw-semibold" data-i18n="hash.fileLabel">Select File</label>
                         <div class="drop-zone" id="hashDropZone">
                             <div class="drop-icon"><i class="bi bi-file-earmark-binary"></i></div>
-                            <p class="mb-1 fw-semibold">Drag &amp; drop file here</p>
-                            <p class="text-muted small mb-0">or click to browse</p>
+                            <p class="mb-1 fw-semibold" data-i18n="hash.dragDrop">Drag &amp; drop file here</p>
+                            <p class="text-muted small mb-0" data-i18n="hash.browse">or click to browse</p>
                             <input type="file" class="d-none" id="hashFileInput" />
                             <div id="hashFileName" class="mt-2" style="display:none;"></div>
                         </div>
                     </div>
 
                     <button type="button" class="btn btn-info w-100 btn-lg text-white" id="hashBtn">
-                        <i class="bi bi-calculator me-1"></i> Calculate Hashes
+                        <i class="bi bi-calculator me-1"></i> <span data-i18n="hash.calcBtn">Calculate Hashes</span>
                     </button>
 
                     <div id="hashError" class="alert alert-warning mt-3" style="display:none;"></div>
                     <div id="hashSpinner" class="text-center mt-3" style="display:none;">
                         <div class="spinner-border text-info" role="status"></div>
-                        <p class="mt-2 text-muted">Hashing file locally...</p>
+                        <p class="mt-2 text-muted" data-i18n="hash.hashing">Hashing file locally...</p>
                     </div>
                 </div>
             </div>
@@ -90,14 +91,13 @@
         function copyToClipboard(text, btn) {
             navigator.clipboard.writeText(text).then(function() {
                 var orig = btn.innerHTML;
-                btn.textContent = 'Copied!';
+                btn.textContent = I18N.t('hash.copied');
                 btn.classList.replace('btn-outline-secondary', 'btn-success');
                 setTimeout(function() {
                     btn.innerHTML = orig;
                     btn.classList.replace('btn-success', 'btn-outline-secondary');
                 }, 1500);
             }).catch(function() {
-                // Fallback for HTTP (clipboard API may also need HTTPS)
                 var ta = document.createElement('textarea');
                 ta.value = text;
                 ta.style.position = 'fixed';
@@ -107,7 +107,7 @@
                 document.execCommand('copy');
                 document.body.removeChild(ta);
                 var orig = btn.innerHTML;
-                btn.textContent = 'Copied!';
+                btn.textContent = I18N.t('hash.copied');
                 btn.classList.replace('btn-outline-secondary', 'btn-success');
                 setTimeout(function() {
                     btn.innerHTML = orig;
@@ -121,7 +121,7 @@
             resultsEl.innerHTML = '';
 
             if (!selectedFile) {
-                errorEl.textContent = 'Please select a file.';
+                errorEl.textContent = I18N.t('hash.selectFile');
                 errorEl.style.display = 'block';
                 return;
             }
@@ -153,6 +153,7 @@
                     resultsEl.appendChild(infoCard);
 
                     // Hash cards
+                    var copyLabel = I18N.t('hash.copy');
                     var hashes = [
                         { label: 'SHA-256', value: sha256, color: 'primary' },
                         { label: 'SHA-512', value: sha512, color: 'success' },
@@ -178,7 +179,7 @@
 
                         var copyBtn = document.createElement('button');
                         copyBtn.className = 'btn btn-outline-secondary btn-sm';
-                        copyBtn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy';
+                        copyBtn.innerHTML = '<i class="bi bi-clipboard me-1"></i> ' + copyLabel;
                         copyBtn.addEventListener('click', (function(val) {
                             return function() { copyToClipboard(val, this); };
                         })(h.value));
@@ -198,7 +199,7 @@
                 } catch(ex) {
                     spinnerEl.style.display = 'none';
                     hashBtn.disabled = false;
-                    errorEl.textContent = 'Error hashing file: ' + ex.message;
+                    errorEl.textContent = I18N.t('hash.error') + ex.message;
                     errorEl.style.display = 'block';
                 }
             };

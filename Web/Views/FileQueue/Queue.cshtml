@@ -17,7 +17,7 @@
 <div class="container my-5">
     <div class="card shadow-sm rounded-4">
         <div class="card-header bg-transparent border-0 pt-4 pb-0">
-            <h2 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>@displayName's Batch Status</h2>
+            <h2 class="mb-0"><i class="bi bi-speedometer2 me-2"></i><span data-i18n="queue.title">Batch Status</span></h2>
         </div>
         <div class="card-body">
             @if (TempData["Message"] != null)
@@ -34,7 +34,7 @@
             <!-- Overall Progress Bar -->
             <div class="mb-3">
                 <div class="d-flex justify-content-between mb-1">
-                    <span class="fw-semibold" id="progressLabel">Checking status…</span>
+                    <span class="fw-semibold" id="progressLabel" data-i18n="queue.checking">Checking status…</span>
                     <span class="text-muted small" id="progressPercent"></span>
                 </div>
                 <div class="progress batch-progress">
@@ -44,7 +44,7 @@
             </div>
 
             <div id="batchStatus" class="alert alert-light">
-                <i class="bi bi-hourglass-split me-1"></i> Loading batch information…
+                <i class="bi bi-hourglass-split me-1"></i> <span data-i18n="queue.loading">Loading batch information…</span>
             </div>
 
             <div id="fileCards" class="mt-4">
@@ -55,16 +55,16 @@
             <div class="d-flex flex-wrap gap-2 mt-4">
                 <div id="downloadSection" style="display: none;">
                     <a id="downloadBtn" href="#" class="btn btn-success">
-                        <i class="bi bi-download me-1"></i> Download Results (ZIP)
+                        <i class="bi bi-download me-1"></i> <span data-i18n="queue.download">Download Results (ZIP)</span>
                     </a>
                 </div>
                 <div id="certificateSection" style="display: none;">
                     <a id="certificateBtn" href="#" class="btn btn-outline-primary">
-                        <i class="bi bi-award me-1"></i> View Certificate
+                        <i class="bi bi-award me-1"></i> <span data-i18n="queue.certificate">View Certificate</span>
                     </a>
                 </div>
                 <a asp-action="Index" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left-circle me-1"></i> Back to Upload
+                    <i class="bi bi-arrow-left-circle me-1"></i> <span data-i18n="queue.backUpload">Back to Upload</span>
                 </a>
             </div>
         </div>
@@ -88,7 +88,7 @@
           function copyHash(text, btn) {
               navigator.clipboard.writeText(text).then(() => {
                   const orig = btn.innerHTML;
-                  btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+                  btn.innerHTML = '<i class="bi bi-check-lg"></i> ' + I18N.t('hash.copied');
                   btn.classList.replace('btn-outline-secondary', 'btn-success');
                   setTimeout(() => {
                       btn.innerHTML = orig;
@@ -99,13 +99,13 @@
           window.copyHash = copyHash;
 
           async function poll() {
-            const res = await fetch(`/FileQueue/BatchStatus?runId=${runId}`);
+            const res = await fetch('/FileQueue/BatchStatus?runId=' + runId);
             if (!res.ok) return;
 
             const job = await res.json();
             const dt  = job.startedAt ? new Date(job.startedAt) : new Date();
-            const date = dt.toLocaleDateString("tr-TR");
-            const time = dt.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+            const date = dt.toLocaleDateString();
+            const time = dt.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
 
             const total      = job.files.length;
             const completed  = job.files.filter(f => f.status === "Completed").length;
@@ -122,25 +122,25 @@
             if (processing > 0) {
                 progressBar.classList.remove('bg-success', 'bg-danger');
                 progressBar.classList.add('bg-warning', 'progress-bar-striped', 'progress-bar-animated');
-                progressLabel.innerHTML = `<i class="bi bi-gear-fill me-1 spin"></i> Processing… ${done}/${total}`;
+                progressLabel.innerHTML = '<i class="bi bi-gear-fill me-1 spin"></i> ' + I18N.t('queue.processing') + ' ' + done + '/' + total;
             } else if (failed > 0 && completed === 0) {
                 progressBar.classList.remove('bg-warning', 'bg-success', 'progress-bar-striped', 'progress-bar-animated');
                 progressBar.classList.add('bg-danger');
-                progressLabel.innerHTML = `<i class="bi bi-x-circle me-1"></i> Failed`;
+                progressLabel.innerHTML = '<i class="bi bi-x-circle me-1"></i> ' + I18N.t('queue.failed');
             } else {
                 progressBar.classList.remove('bg-warning', 'progress-bar-striped', 'progress-bar-animated');
                 progressBar.classList.add('bg-success');
-                progressLabel.innerHTML = `<i class="bi bi-check-circle me-1"></i> Complete`;
+                progressLabel.innerHTML = '<i class="bi bi-check-circle me-1"></i> ' + I18N.t('queue.complete');
             }
 
             let summary;
             if (processing > 0) {
-              summary = `<i class="bi bi-hourglass-split me-1"></i> Processing… ${processing}/${total} remaining`;
+              summary = '<i class="bi bi-hourglass-split me-1"></i> ' + I18N.t('queue.processing') + ' ' + processing + '/' + total + ' ' + I18N.t('queue.remaining');
             } else {
-              summary = `<i class="bi bi-check-circle me-1"></i> ${completed}/${total} completed`;
-              if (failed > 0) summary += `, <span class="text-danger">${failed} failed</span>`;
+              summary = '<i class="bi bi-check-circle me-1"></i> ' + completed + '/' + total + ' ' + I18N.t('queue.completed');
+              if (failed > 0) summary += ', <span class="text-danger">' + failed + ' ' + I18N.t('queue.failed').toLowerCase() + '</span>';
             }
-            statusEl.innerHTML = `${date} ${time} — ${summary}`;
+            statusEl.innerHTML = date + ' ' + time + ' — ' + summary;
 
             fileCardsEl.innerHTML = "";
 
@@ -157,7 +157,7 @@
               const title = document.createElement("h6");
               title.className = "card-title mb-1";
               const fileName = f.path.split('\\').pop().split('/').pop();
-              title.innerHTML = `<i class="bi bi-file-earmark me-1"></i> ${fileName}`;
+              title.innerHTML = '<i class="bi bi-file-earmark me-1"></i> ' + fileName;
 
               const badge = document.createElement("span");
               badge.className = "badge me-2 " +
@@ -171,16 +171,16 @@
               if (f.retries > 0) {
                 retry = document.createElement("span");
                 retry.className = "badge bg-secondary me-2";
-                retry.textContent = "retries: " + f.retries;
+                retry.textContent = I18N.t('queue.retries') + ": " + f.retries;
               }
 
               const times = document.createElement("p");
               times.className = "card-text small text-muted mb-0";
               const started = f.startedAt
-                ? `Started: ${new Date(f.startedAt).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}`
+                ? I18N.t('queue.started') + ': ' + new Date(f.startedAt).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"})
                 : "";
               const finished = f.finishedAt
-                ? ` | Finished: ${new Date(f.finishedAt).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}`
+                ? ' | ' + I18N.t('queue.finished') + ': ' + new Date(f.finishedAt).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"})
                 : "";
               times.textContent = started + finished;
 
@@ -198,9 +198,9 @@
             if (job.status === "Completed" || job.status === "Failed") {
               if (completed > 0) {
                 downloadSection.style.display = "block";
-                downloadBtn.href = `/FileQueue/Download?runId=${runId}`;
+                downloadBtn.href = '/FileQueue/Download?runId=' + runId;
                 certificateSection.style.display = "block";
-                certificateBtn.href = `/FileQueue/Certificate?runId=${runId}`;
+                certificateBtn.href = '/FileQueue/Certificate?runId=' + runId;
               }
             } else {
               setTimeout(poll, 600);

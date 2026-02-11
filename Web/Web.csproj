@@ -4,8 +4,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- Don't include referenced project outputs (like its appsettings.json) when publishing Web -->
-    <ExcludeReferencedProjectsFromPublish>true</ExcludeReferencedProjectsFromPublish>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,5 +16,11 @@
     <ProjectReference Include="..\SecureSolution2\SecureSolution2.csproj" />
   </ItemGroup>
 
-</Project>
+  <!-- Exclude SecureSolution2/appsettings.json from publish to avoid conflict -->
+  <Target Name="ExcludeReferencedAppSettings" BeforeTargets="GetCopyToPublishDirectoryItems">
+    <ItemGroup>
+      <ContentWithTargetPath Remove="@(ContentWithTargetPath)" Condition="'%(RelativePath)' == 'SecureSolution2/appsettings.json'" />
+    </ItemGroup>
+  </Target>
 
+</Project>

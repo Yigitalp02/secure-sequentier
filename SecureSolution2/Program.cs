@@ -3,6 +3,7 @@ using SecureSolution2.Models;
 using SecureSolution2.Services;
 using Serilog;
 using Serilog.Sinks.Map;
+using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -66,6 +67,7 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<IConfigurationService>(configService);
 builder.Services.AddSingleton<QueueStore>();
 builder.Services.AddHostedService<OrchestratorBackgroundService>();
+builder.Services.AddHostedService<CleanupBackgroundService>();
 
 var app = builder.Build();
 
@@ -108,6 +110,39 @@ app.MapPost("/api/upload", async (
     // Add to queue
     store.Enqueue(fullPath, targetApp, user, runId);
     return Results.Ok();
+});
+
+// Download processed outputs as ZIP
+app.MapGet("/api/download", (string runId, string user, QueueStore store) =>
+{
+    // Find the job
+    var jobs = store.GetJobsForUser(user);
+    var job = jobs.FirstOrDefault(j => j.RunId == runId);
+
+    if (job is null)
+        return Results.NotFound("Job not found");
+
+    if (string.IsNullOrEmpty(job.OutputDirectory) || !Directory.Exists(job.OutputDirectory))
+        return Results.NotFound("Output files not found or not yet ready");
+
+    var outputFiles = Directory.GetFiles(job.OutputDirectory, "*", SearchOption.AllDirectories);
+    if (outputFiles.Length == 0)
+        return Results.NotFound("No output files found");
+
+    // Create ZIP in memory
+    var memStream = new MemoryStream();
+    using (var zip = new ZipArchive(memStream, ZipArchiveMode.Create, leaveOpen: true))
+    {
+        foreach (var filePath in outputFiles)
+        {
+            var entryName = Path.GetRelativePath(job.OutputDirectory, filePath);
+            zip.CreateEntryFromFile(filePath, entryName);
+        }
+    }
+
+    memStream.Position = 0;
+    var fileName = $"output_{runId[..Math.Min(8, runId.Length)]}.zip";
+    return Results.File(memStream, "application/zip", fileName);
 });
 
 app.MapHub<QueueHub>("/hubs/queue");

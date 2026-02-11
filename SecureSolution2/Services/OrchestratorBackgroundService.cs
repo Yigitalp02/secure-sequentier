@@ -80,6 +80,10 @@ namespace SecureSolution2.Services
                 var batchDir = Path.Combine(todayDir, DateTime.Now.ToString("HH.mm.ss"));
                 Directory.CreateDirectory(batchDir);
 
+                // Store output directory in job for download
+                job.OutputDirectory = batchDir;
+                _store.Flush(job.User);
+
                 // Process each file, retrying up to maxRetries
                 foreach (var file in job.Files)
                 {

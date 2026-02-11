@@ -18,4 +18,10 @@ public class Job
     public JobStatus Status { get; set; } = JobStatus.Pending;
     public DateTime? StartedAt { get; set; }
     public int RetryCount { get; set; }
+
+    /// <summary>
+    /// The directory where processed output files are stored.
+    /// Used to generate a downloadable ZIP after processing completes.
+    /// </summary>
+    public string? OutputDirectory { get; set; }
 }

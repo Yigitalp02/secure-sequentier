@@ -6,6 +6,7 @@ namespace Web.Services
     public interface ISecureSequentialApi
     {
         Task<bool> UploadAsync(IFormFile file, string profile, string targetApp, string runId);
+        Task<(Stream? stream, string? fileName)> DownloadAsync(string runId, string user);
     }
 
     public sealed class SecureSequentialApi : ISecureSequentialApi
@@ -35,6 +36,18 @@ namespace Web.Services
 
             var resp = await _http.PostAsync("api/upload", mp);
             return resp.IsSuccessStatusCode;
+        }
+
+        public async Task<(Stream? stream, string? fileName)> DownloadAsync(string runId, string user)
+        {
+            var resp = await _http.GetAsync($"api/download?runId={Uri.EscapeDataString(runId)}&user={Uri.EscapeDataString(user)}");
+            if (!resp.IsSuccessStatusCode)
+                return (null, null);
+
+            var stream = await resp.Content.ReadAsStreamAsync();
+            var fileName = resp.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+                           ?? $"output_{runId[..Math.Min(8, runId.Length)]}.zip";
+            return (stream, fileName);
         }
     }
 }

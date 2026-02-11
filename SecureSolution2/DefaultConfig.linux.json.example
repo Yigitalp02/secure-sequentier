@@ -3,6 +3,7 @@
   "QueueDirectory": "/app/data/queue/{USER}",
   "TimeoutSeconds": 30,
   "DefaultRetryCount": 3,
+  "FileRetentionHours": 1,
   "Mapping": {
     "signer": {
       "ExecutablePath": "/app/subsystems/SignerApp/SignerApp",

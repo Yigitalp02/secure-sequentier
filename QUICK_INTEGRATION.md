@@ -111,19 +111,17 @@ sudo docker compose build secure-sequentier-backend secure-sequentier-frontend
 sudo docker compose up -d secure-sequentier-backend secure-sequentier-frontend
 
 # 6. Configure Cloudflare Tunnel
-sudo nano /home/bilgin/homepage/config/cloudflared/config.yml
-```
-
-Add to ingress:
-```yaml
-  - hostname: secure.ybilgin.com
-    service: http://192.168.50.100:5188
-```
-
-```bash
-# 7. Restart cloudflared
-cd /home/bilgin/homepage
-docker-compose restart cloudflared
+# Option A: If you use the Cloudflare Zero Trust Dashboard (web UI):
+#   Go to: https://one.dash.cloudflare.com → Networks → Tunnels → Your Tunnel → Public Hostname
+#   Add: secure.ybilgin.com → http://192.168.50.100:5188
+#
+# Option B: If you have a local cloudflared config file:
+#   Find it with: sudo find / -name "config.yml" -path "*cloudflared*" 2>/dev/null
+#   Then add to the ingress section:
+#     - hostname: secure.ybilgin.com
+#       service: http://192.168.50.100:5188
+#   And restart cloudflared:
+#   sudo docker compose restart cloudflared
 ```
 
 ## Verify

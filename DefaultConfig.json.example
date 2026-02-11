@@ -3,6 +3,7 @@
   "QueueDirectory": "C:\\Users\\{USER}\\SecureSequentialProfiles\\{USER}",
   "TimeoutSeconds": 30,
   "DefaultRetryCount": 3,
+  "FileRetentionHours": 1,
   "Mapping": {
     "signer": {
       "ExecutablePath": "C:\\Users\\{USER}\\Subsystems\\SignerApp\\SignerApp.exe",

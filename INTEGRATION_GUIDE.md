@@ -143,28 +143,34 @@ sudo docker compose up -d --build
 
 ## Step 7: Configure Cloudflare Tunnel
 
-Add to your Cloudflare Tunnel config (usually in `/home/bilgin/homepage/config/cloudflared/config.yml` or wherever your cloudflared config is):
+### Option A: Cloudflare Zero Trust Dashboard (Web UI)
 
-```yaml
-ingress:
-  # ... existing rules ...
-  
-  - hostname: secure.ybilgin.com
-    service: http://192.168.50.100:5188
-  
-  # Catch-all (must be last)
-  - service: http_status:404
+If you manage your tunnel through the dashboard:
+
+1. Go to [Cloudflare Zero Trust](https://one.dash.cloudflare.com)
+2. Navigate to **Networks → Tunnels → Your Tunnel → Public Hostname**
+3. Add a new public hostname:
+   - **Subdomain**: `secure`
+   - **Domain**: `ybilgin.com`
+   - **Service Type**: `HTTP`
+   - **URL**: `192.168.50.100:5188`
+
+### Option B: Local Config File
+
+If you have a local cloudflared config file, find it with:
+```bash
+sudo find / -name "config.yml" -path "*cloudflared*" 2>/dev/null
 ```
 
-Restart cloudflared:
+Add to the ingress section:
+```yaml
+  - hostname: secure.ybilgin.com
+    service: http://192.168.50.100:5188
+```
 
+Then restart cloudflared:
 ```bash
-# If running in docker-compose
-cd /home/bilgin/homepage
-docker-compose restart cloudflared
-
-# Or if running as systemd service
-sudo systemctl restart cloudflared
+sudo docker compose restart cloudflared
 ```
 
 ## Step 8: Test Access

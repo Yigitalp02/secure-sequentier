@@ -186,6 +186,21 @@ namespace Web.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Download(string runId)
+        {
+            var user = EnsureCurrentProfile();
+            var (stream, fileName) = await _api.DownloadAsync(runId, user);
+
+            if (stream is null || fileName is null)
+            {
+                TempData["Message"] = "Output files are not ready yet or have been cleaned up.";
+                return RedirectToAction(nameof(Queue), new { runId });
+            }
+
+            return File(stream, "application/zip", fileName);
+        }
+
+        [HttpGet]
         public IActionResult BatchStatus(string runId)
         {
             var user = EnsureCurrentProfile();

@@ -8,6 +8,12 @@ public class UserConfig
     public int DefaultRetryCount { get; set; } = 1;
     public string QueueDirectory { get; set; } = string.Empty;    // ← default
 
+    /// <summary>
+    /// Hours to keep user files (inputs, outputs, queue data) before auto-deletion.
+    /// Set to 0 to disable cleanup. Default: 1 hour.
+    /// </summary>
+    public int FileRetentionHours { get; set; } = 1;
+
     public Dictionary<string, SubSystemMap> Mapping { get; set; }
         = new();
     public class SubSystemMap

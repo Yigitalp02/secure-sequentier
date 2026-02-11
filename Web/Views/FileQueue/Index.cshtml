@@ -1,51 +1,157 @@
 @using Microsoft.AspNetCore.Http
 @{
-    ViewData["Title"] = "SecureSequential Web UI";
-    var active = Context.Session.GetString("ActiveProfile");   // set by EnsureCurrentProfile()
+    ViewData["Title"] = "Secure Sequentier";
+    var active = Context.Session.GetString("ActiveProfile");
     var displayName = ViewBag.DisplayName as string ?? active;
     var subApps = ViewBag.SubApps as string[] ?? new[] { "signer" };
+    var statsJson = ViewBag.Stats as string;
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="card shadow-sm rounded-lg">
+<!-- Hero Section -->
+<div class="hero-section text-center">
+    <div class="container">
+        <i class="bi bi-shield-lock-fill display-3 mb-3"></i>
+        <h1>Secure Sequentier</h1>
+        <p class="lead mb-4">
+            Sign, hash, and verify your files with SHA-256, SHA-512 & MD5.
+            <br />Powered by real cryptographic algorithms.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="#upload-section" class="btn btn-light btn-lg px-4">
+                <i class="bi bi-upload me-2"></i> Sign Files
+            </a>
+            <a asp-action="Verify" class="btn btn-outline-light btn-lg px-4">
+                <i class="bi bi-patch-check me-2"></i> Verify
+            </a>
+        </div>
+    </div>
+</div>
 
-                <div class="card-body">
-                    <p class="lead text-center mb-4">
-                        Welcome! <small class="text-muted">(Session: @displayName)</small>
-                    </p>
-                    <hr />
-                    <h4 class="mb-4 text-center">Start a Batch</h4>
-                    <form asp-action="Upload" method="post" enctype="multipart/form-data">
+<!-- Stats Section -->
+<div class="container mb-5" id="stats-section">
+    <div class="row g-3 justify-content-center">
+        <div class="col-6 col-md-3">
+            <div class="card stat-card shadow-sm">
+                <div class="stat-number text-primary" id="stat-batches">0</div>
+                <div class="text-muted small">Total Batches</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card shadow-sm">
+                <div class="stat-number text-success" id="stat-files">0</div>
+                <div class="text-muted small">Files Processed</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card shadow-sm">
+                <div class="stat-number text-info" id="stat-completed">0</div>
+                <div class="text-muted small">Signatures Created</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card shadow-sm">
+                <div class="stat-number text-warning" id="stat-users">0</div>
+                <div class="text-muted small">Active Users</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feature Cards -->
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card feature-card shadow-sm p-4 text-center">
+                <div class="feature-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-pen-fill"></i>
+                </div>
+                <h5>Digital Signing</h5>
+                <p class="text-muted small mb-0">
+                    Upload your files and generate cryptographic signatures using SHA-256, SHA-512, and MD5 hash algorithms.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card shadow-sm p-4 text-center">
+                <div class="feature-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-patch-check-fill"></i>
+                </div>
+                <h5>File Verification</h5>
+                <p class="text-muted small mb-0">
+                    Verify file integrity by comparing a file against its known hash. Instantly confirm nothing was tampered with.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card shadow-sm p-4 text-center">
+                <div class="feature-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-hash"></i>
+                </div>
+                <h5>Hash Calculator</h5>
+                <p class="text-muted small mb-0">
+                    Calculate SHA-256, SHA-512, and MD5 hashes for any file instantly. Copy hashes with one click.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Section -->
+<div class="container mb-5" id="upload-section">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 text-center">
+                    <h4 class="mb-1"><i class="bi bi-cloud-arrow-up me-2"></i>Start a Batch</h4>
+                    <small class="text-muted">Session: @displayName</small>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Upload" method="post" enctype="multipart/form-data" id="uploadForm">
                         @Html.AntiForgeryToken()
 
                         <div class="mb-3">
-                            <label class="form-label">Target App</label>
-                            <select class="form-select" name="targetApp">
+                            <label class="form-label fw-semibold">Target Signer App</label>
+                            <select class="form-select" name="targetApp" id="targetApp">
                                 @foreach (var app in subApps)
                                 {
-                                <option value="@app">@app</option>
+                                    <option value="@app">@app</option>
                                 }
                             </select>
                         </div>
 
+                        <!-- Drag & Drop Zone -->
                         <div class="mb-3">
-                            <label class="form-label">Select Files</label>
-                            <input class="form-control" type="file" name="files" multiple />
+                            <label class="form-label fw-semibold">Select Files</label>
+                            <div class="drop-zone" id="dropZone">
+                                <div class="drop-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                                <p class="mb-1 fw-semibold">Drag &amp; drop files here</p>
+                                <p class="text-muted small mb-0">or click to browse</p>
+                                <input type="file" name="files" multiple class="d-none" id="fileInput" />
+                                <div class="file-list" id="fileList" style="display:none;">
+                                    <!-- Files will appear here -->
+                                </div>
+                            </div>
+                            <!-- File size warning -->
+                            <div id="fileSizeInfo" class="mt-2" style="display:none;">
+                                <span class="badge bg-secondary" id="fileSizeTotal"></span>
+                                <span class="badge bg-warning text-dark file-size-warning" id="fileSizeWarn" style="display:none;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Large file(s) detected — processing may take longer
+                                </span>
+                            </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Start</button>
+                        <button type="submit" class="btn btn-primary w-100 btn-lg" id="submitBtn" disabled>
+                            <i class="bi bi-lightning-charge me-1"></i> Sign Files
+                        </button>
                     </form>
 
                     @if (TempData["Message"] != null)
                     {
-                    <div class="alert alert-info mt-3" role="alert">
-                        @TempData["Message"]
-                    </div>
+                        <div class="alert alert-info mt-3" role="alert">
+                            @TempData["Message"]
+                        </div>
                     }
                 </div>
-
             </div>
         </div>
     </div>
@@ -53,16 +159,101 @@
 
 @section Styles {
     <style>
-        .card {
-            border: none;
-        }
-
-        .card-header {
-            border-bottom: none;
-        }
-
-        .btn-primary {
-            letter-spacing: 0.5px;
-        }
+        .card { border: none; }
+        .card-header { border-bottom: none; }
+        .btn-primary { letter-spacing: 0.5px; }
     </style>
+}
+
+@section Scripts {
+    <script>
+    (function() {
+        // ── Stats ──
+        @if (statsJson != null)
+        {
+            <text>
+            try {
+                var stats = @Html.Raw(statsJson);
+                document.getElementById('stat-batches').textContent = stats.totalBatches || 0;
+                document.getElementById('stat-files').textContent = stats.totalFiles || 0;
+                document.getElementById('stat-completed').textContent = stats.completedFiles || 0;
+                document.getElementById('stat-users').textContent = stats.uniqueUsers || 0;
+            } catch(e) {}
+            </text>
+        }
+
+        // ── Drag & Drop ──
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const fileSizeInfo = document.getElementById('fileSizeInfo');
+        const fileSizeTotal = document.getElementById('fileSizeTotal');
+        const fileSizeWarn = document.getElementById('fileSizeWarn');
+        const submitBtn = document.getElementById('submitBtn');
+        const MAX_WARN_SIZE = 50 * 1024 * 1024; // 50 MB warning threshold
+
+        // Click to browse
+        dropZone.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'BUTTON') fileInput.click();
+        });
+
+        // Drag events
+        ['dragenter','dragover'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave','drop'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            fileInput.files = e.dataTransfer.files;
+            updateFileList(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', () => {
+            updateFileList(fileInput.files);
+        });
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function updateFileList(files) {
+            fileList.innerHTML = '';
+            if (files.length === 0) {
+                fileList.style.display = 'none';
+                fileSizeInfo.style.display = 'none';
+                submitBtn.disabled = true;
+                return;
+            }
+
+            let totalSize = 0;
+            for (const f of files) {
+                totalSize += f.size;
+                const item = document.createElement('div');
+                item.className = 'file-item bg-body-secondary';
+                item.innerHTML = `
+                    <span><i class="bi bi-file-earmark me-1"></i> ${f.name}</span>
+                    <span class="badge bg-secondary">${formatSize(f.size)}</span>
+                `;
+                fileList.appendChild(item);
+            }
+
+            fileList.style.display = 'block';
+            fileSizeInfo.style.display = 'block';
+            fileSizeTotal.textContent = `${files.length} file(s) — ${formatSize(totalSize)} total`;
+            fileSizeWarn.style.display = totalSize > MAX_WARN_SIZE ? 'inline' : 'none';
+            submitBtn.disabled = false;
+        }
+    })();
+    </script>
 }

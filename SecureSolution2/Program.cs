@@ -4,6 +4,7 @@ using SecureSolution2.Services;
 using Serilog;
 using Serilog.Sinks.Map;
 using System.IO.Compression;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -143,6 +144,93 @@ app.MapGet("/api/download", (string runId, string user, QueueStore store) =>
     memStream.Position = 0;
     var fileName = $"output_{runId[..Math.Min(8, runId.Length)]}.zip";
     return Results.File(memStream, "application/zip", fileName);
+});
+
+// Verify a file against an expected hash
+app.MapPost("/api/verify", async (HttpContext ctx) =>
+{
+    var form = await ctx.Request.ReadFormAsync();
+    var file = form.Files["file"];
+    var expectedHash = form["hash"].ToString().Trim().ToLower();
+    var algorithm = form["algorithm"].ToString();
+
+    if (file is null || file.Length == 0)
+        return Results.BadRequest("No file sent");
+    if (string.IsNullOrWhiteSpace(expectedHash))
+        return Results.BadRequest("No hash provided");
+
+    using var stream = file.OpenReadStream();
+    using HashAlgorithm hasher = (algorithm?.ToUpper()) switch
+    {
+        "SHA512" => SHA512.Create(),
+        "MD5" => MD5.Create(),
+        _ => SHA256.Create()
+    };
+
+    var hashBytes = await hasher.ComputeHashAsync(stream);
+    var actualHash = Convert.ToHexString(hashBytes).ToLower();
+    var match = actualHash == expectedHash;
+
+    return Results.Ok(new
+    {
+        match,
+        actualHash,
+        expectedHash,
+        algorithm = algorithm ?? "SHA256",
+        fileName = file.FileName,
+        fileSize = file.Length
+    });
+});
+
+// Calculate hashes for a file
+app.MapPost("/api/hash", async (HttpContext ctx) =>
+{
+    var form = await ctx.Request.ReadFormAsync();
+    var file = form.Files["file"];
+
+    if (file is null || file.Length == 0)
+        return Results.BadRequest("No file sent");
+
+    byte[] fileBytes;
+    using (var ms = new MemoryStream())
+    {
+        await file.CopyToAsync(ms);
+        fileBytes = ms.ToArray();
+    }
+
+    string ComputeHash(HashAlgorithm algo)
+    {
+        var hash = algo.ComputeHash(fileBytes);
+        return Convert.ToHexString(hash).ToLower();
+    }
+
+    return Results.Ok(new
+    {
+        fileName = file.FileName,
+        fileSize = file.Length,
+        sha256 = ComputeHash(SHA256.Create()),
+        sha512 = ComputeHash(SHA512.Create()),
+        md5 = ComputeHash(MD5.Create()),
+        timestamp = DateTime.UtcNow
+    });
+});
+
+// Get activity stats
+app.MapGet("/api/stats", (QueueStore store) =>
+{
+    var allJobs = store.EnumerateUserQueues().SelectMany(q => q.Jobs).ToList();
+    var totalFiles = allJobs.Sum(j => j.Files.Count);
+    var completedFiles = allJobs.Sum(j => j.Files.Count(f => f.Status == JobStatus.Completed));
+    var totalBatches = allJobs.Count;
+    var uniqueUsers = store.EnumerateUserQueues().Count();
+
+    return Results.Ok(new
+    {
+        totalBatches,
+        totalFiles,
+        completedFiles,
+        uniqueUsers
+    });
 });
 
 app.MapHub<QueueHub>("/hubs/queue");

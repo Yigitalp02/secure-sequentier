@@ -1,40 +1,264 @@
-﻿html {
+﻿/* ══════════════════════════════════════════════════════════
+   Secure Sequentier – Site Styles
+   ══════════════════════════════════════════════════════════ */
+
+html {
     font-size: 14px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
-    html {
-        font-size: 16px;
-    }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-    position: relative;
-    min-height: 100%;
+    html { font-size: 16px; }
 }
 
 body {
     margin-bottom: 60px;
 }
 
-/*── Batch-status colours (used on Queue page) ──────────*/
-.st-pending {
+/* ─── Focus styles ─── */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus,
+.form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+/* ─── Batch-status colours ─── */
+.st-pending    { color: #6c757d; }
+.st-processing { color: #fd7e14; }
+.st-completed  { color: #28a745; }
+.st-failed     { color: #dc3545; }
+
+/* ─── Hero section ─── */
+.hero-section {
+    background: linear-gradient(135deg, #0d6efd 0%, #6610f2 50%, #6f42c1 100%);
+    color: white;
+    padding: 4rem 0;
+    border-radius: 0 0 2rem 2rem;
+    margin-bottom: 2rem;
+}
+
+[data-bs-theme="dark"] .hero-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+.hero-section h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.hero-section .lead {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+/* ─── Feature cards ─── */
+.feature-card {
+    border: none;
+    border-radius: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+/* ─── Stats cards ─── */
+.stat-card {
+    border: none;
+    border-radius: 1rem;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* ─── Drag & Drop zone ─── */
+.drop-zone {
+    border: 2px dashed #6c757d;
+    border-radius: 1rem;
+    padding: 2.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: transparent;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+    border-color: #0d6efd;
+    background: rgba(13, 110, 253, 0.05);
+}
+
+[data-bs-theme="dark"] .drop-zone:hover,
+[data-bs-theme="dark"] .drop-zone.drag-over {
+    background: rgba(13, 110, 253, 0.15);
+}
+
+.drop-zone .drop-icon {
+    font-size: 3rem;
     color: #6c757d;
+    margin-bottom: 0.5rem;
 }
-/* grey   */
-.st-processing {
-    color: #fd7e14;
+
+.drop-zone.drag-over .drop-icon {
+    color: #0d6efd;
 }
-/* orange */
-.st-completed {
-    color: #28a745;
+
+.drop-zone .file-list {
+    margin-top: 1rem;
+    text-align: left;
 }
-/* green  */
-.st-failed {
-    color: #dc3545;
+
+.drop-zone .file-list .file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.25rem;
 }
-/* red    */
+
+/* ─── Progress bar ─── */
+.batch-progress {
+    height: 1.5rem;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.batch-progress .progress-bar {
+    transition: width 0.5s ease-in-out;
+}
+
+/* ─── Verify result ─── */
+.verify-result {
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+}
+
+.verify-match {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 2px solid #28a745;
+}
+
+.verify-mismatch {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border: 2px solid #dc3545;
+}
+
+[data-bs-theme="dark"] .verify-match {
+    background: linear-gradient(135deg, #1a3d2a 0%, #1e4b33 100%);
+}
+
+[data-bs-theme="dark"] .verify-mismatch {
+    background: linear-gradient(135deg, #3d1a1e 0%, #4b1e23 100%);
+}
+
+/* ─── Hash display ─── */
+.hash-display {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    word-break: break-all;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    position: relative;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.copy-btn:hover {
+    opacity: 1;
+}
+
+/* ─── File size badge ─── */
+.file-size-warning {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ─── Certificate ─── */
+.certificate {
+    border: 3px double #6c757d;
+    border-radius: 1rem;
+    padding: 3rem;
+    background: white;
+    color: #333;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.certificate-seal {
+    font-size: 4rem;
+    color: #0d6efd;
+}
+
+/* ─── Navbar active highlighting ─── */
+.nav-link.active {
+    font-weight: 600;
+}
+
+/* ─── About page ─── */
+.architecture-step {
+    position: relative;
+    padding-left: 3rem;
+    margin-bottom: 1.5rem;
+}
+
+.architecture-step::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 2.5rem;
+    bottom: -1.5rem;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.architecture-step:last-child::before {
+    display: none;
+}
+
+.step-number {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    position: absolute;
+    left: 0;
+    top: 0.25rem;
+}
+
+/* ─── Smooth transitions ─── */
+.card, .btn {
+    transition: all 0.2s ease;
+}

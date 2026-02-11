@@ -179,10 +179,19 @@ namespace Web.Controllers
 
         /* ─────────────────────────── ROUTES ─────────────────────────── */
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             EnsureCurrentProfile();
-            LoadSubApps();      // ← call it here
+            LoadSubApps();
+
+            // Load stats for the landing page
+            try
+            {
+                var statsJson = await _api.GetStatsAsync();
+                ViewBag.Stats = statsJson;
+            }
+            catch { ViewBag.Stats = null; }
+
             return View();
         }
 
@@ -277,6 +286,108 @@ namespace Web.Controllers
             catch { /* ignore */ }
 
             return Json(new { status = "Unknown" });
+        }
+
+        /* ─────────────── VERIFY ─────────────── */
+        [HttpGet]
+        public IActionResult Verify()
+        {
+            EnsureCurrentProfile();
+            return View();
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Verify(IFormFile file, string hash, string algorithm)
+        {
+            EnsureCurrentProfile();
+
+            if (file is null || file.Length == 0)
+            {
+                ViewBag.Error = "Please select a file.";
+                return View();
+            }
+            if (string.IsNullOrWhiteSpace(hash))
+            {
+                ViewBag.Error = "Please enter a hash value.";
+                return View();
+            }
+
+            var resultJson = await _api.VerifyAsync(file, hash, algorithm ?? "SHA256");
+            ViewBag.Result = resultJson;
+            return View();
+        }
+
+        /* ─────────────── HASH CALCULATOR ─────────────── */
+        [HttpGet]
+        public IActionResult HashCalculator()
+        {
+            EnsureCurrentProfile();
+            return View();
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> HashCalculator(IFormFile file)
+        {
+            EnsureCurrentProfile();
+
+            if (file is null || file.Length == 0)
+            {
+                ViewBag.Error = "Please select a file.";
+                return View();
+            }
+
+            var resultJson = await _api.HashAsync(file);
+            ViewBag.Result = resultJson;
+            return View();
+        }
+
+        /* ─────────────── ABOUT ─────────────── */
+        [HttpGet]
+        public IActionResult About()
+        {
+            EnsureCurrentProfile();
+            return View();
+        }
+
+        /* ─────────────── CERTIFICATE ─────────────── */
+        [HttpGet]
+        public IActionResult Certificate(string runId)
+        {
+            var user = EnsureCurrentProfile();
+            ViewBag.RunId = runId;
+            ViewBag.User = user;
+
+            // Try to read the processed output to get hash info
+            var cfg = GetPerUserConfig(user);
+            ViewBag.CertData = null;
+
+            try
+            {
+                // Find signature files from the output directory
+                foreach (var mapping in cfg.Mapping)
+                {
+                    var outputBase = mapping.Value.OutputDirectory;
+                    if (!Directory.Exists(outputBase)) continue;
+
+                    // Search for .sig.json files in dated subdirectories
+                    var sigFiles = Directory.GetFiles(outputBase, "*.sig.json", SearchOption.AllDirectories);
+                    foreach (var sigFile in sigFiles)
+                    {
+                        var dir = Path.GetDirectoryName(sigFile)!;
+                        if (dir.Replace("\\", "/").Contains(runId.Replace(".", "/")) ||
+                            sigFiles.Length > 0) // Use first available
+                        {
+                            ViewBag.CertData = System.IO.File.ReadAllText(sigFile);
+                            ViewBag.CertApp = mapping.Key;
+                            break;
+                        }
+                    }
+                    if (ViewBag.CertData != null) break;
+                }
+            }
+            catch { /* ignore */ }
+
+            return View();
         }
 
         [HttpGet]

@@ -1,0 +1,176 @@
+@{
+    ViewData["Title"] = "Hash Calculator";
+    var resultJson = ViewBag.Result as string;
+    var error = ViewBag.Error as string;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-4">
+                <i class="bi bi-hash display-4 text-info"></i>
+                <h2 class="mt-2">Hash Calculator</h2>
+                <p class="text-muted">
+                    Upload a file and instantly get its SHA-256, SHA-512, and MD5 hashes.
+                </p>
+            </div>
+
+            <div class="card shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <form asp-action="HashCalculator" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Select File</label>
+                            <div class="drop-zone" id="hashDropZone">
+                                <div class="drop-icon"><i class="bi bi-file-earmark-binary"></i></div>
+                                <p class="mb-1 fw-semibold">Drag &amp; drop file here</p>
+                                <p class="text-muted small mb-0">or click to browse</p>
+                                <input type="file" name="file" class="d-none" id="hashFileInput" />
+                                <div id="hashFileName" class="mt-2" style="display:none;"></div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-info w-100 btn-lg text-white">
+                            <i class="bi bi-calculator me-1"></i> Calculate Hashes
+                        </button>
+                    </form>
+
+                    @if (!string.IsNullOrEmpty(error))
+                    {
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i> @error
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Results placeholder -->
+            <div class="mt-4" id="hashResults"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data for JS -->
+@if (!string.IsNullOrEmpty(resultJson))
+{
+    <script id="hashResultData" type="application/json">@Html.Raw(resultJson)</script>
+}
+
+@section Scripts {
+    <script>
+    (function() {
+        // Drop zone
+        var dropZone = document.getElementById('hashDropZone');
+        var fileInput = document.getElementById('hashFileInput');
+        var fileNameEl = document.getElementById('hashFileName');
+
+        dropZone.addEventListener('click', function() { fileInput.click(); });
+
+        ['dragenter','dragover'].forEach(function(evt) {
+            dropZone.addEventListener(evt, function(e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        });
+        ['dragleave','drop'].forEach(function(evt) {
+            dropZone.addEventListener(evt, function(e) { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            fileInput.files = e.dataTransfer.files;
+            showFileName(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', function() { showFileName(fileInput.files); });
+
+        function showFileName(files) {
+            if (files.length > 0) {
+                fileNameEl.style.display = 'block';
+                fileNameEl.textContent = files[0].name;
+                fileNameEl.className = 'mt-2 badge bg-info';
+            }
+        }
+
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(function() {
+                var orig = btn.innerHTML;
+                btn.textContent = 'Copied!';
+                btn.classList.replace('btn-outline-secondary', 'btn-success');
+                setTimeout(function() {
+                    btn.innerHTML = orig;
+                    btn.classList.replace('btn-success', 'btn-outline-secondary');
+                }, 1500);
+            });
+        }
+
+        // Show results if data exists
+        var dataEl = document.getElementById('hashResultData');
+        if (dataEl) {
+            try {
+                var result = JSON.parse(dataEl.textContent);
+                var container = document.getElementById('hashResults');
+
+                function formatBytes(b) {
+                    if (b < 1024) return b + ' B';
+                    if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+                    return (b/(1024*1024)).toFixed(1) + ' MB';
+                }
+
+                // Build file info card
+                var infoCard = document.createElement('div');
+                infoCard.className = 'card shadow-sm rounded-4 mb-3';
+                infoCard.innerHTML =
+                    '<div class="card-body text-center">' +
+                    '<i class="bi bi-file-earmark-check text-info" style="font-size: 2rem;"></i>' +
+                    '<h5 class="mt-2">' + result.fileName + '</h5>' +
+                    '<span class="badge bg-secondary me-1">' + formatBytes(result.fileSize) + '</span>' +
+                    '<span class="badge bg-secondary">' + new Date(result.timestamp).toLocaleString() + '</span>' +
+                    '</div>';
+                container.appendChild(infoCard);
+
+                // Build hash cards
+                var hashes = [
+                    { label: 'SHA-256', value: result.sha256, color: 'primary' },
+                    { label: 'SHA-512', value: result.sha512, color: 'success' },
+                    { label: 'MD5', value: result.md5, color: 'warning' }
+                ];
+
+                hashes.forEach(function(h) {
+                    var card = document.createElement('div');
+                    card.className = 'card mb-3 shadow-sm rounded-3';
+
+                    var body = document.createElement('div');
+                    body.className = 'card-body';
+
+                    var header = document.createElement('div');
+                    header.className = 'd-flex justify-content-between align-items-center mb-2';
+
+                    var labelEl = document.createElement('h6');
+                    labelEl.className = 'mb-0';
+                    var badge = document.createElement('span');
+                    badge.className = 'badge bg-' + h.color + ' me-2';
+                    badge.textContent = h.label;
+                    labelEl.appendChild(badge);
+
+                    var copyBtn = document.createElement('button');
+                    copyBtn.className = 'btn btn-outline-secondary btn-sm';
+                    copyBtn.innerHTML = '<i class="bi bi-clipboard me-1"></i> Copy';
+                    copyBtn.addEventListener('click', (function(val) {
+                        return function() { copyToClipboard(val, this); };
+                    })(h.value));
+
+                    header.appendChild(labelEl);
+                    header.appendChild(copyBtn);
+
+                    var hashDiv = document.createElement('div');
+                    hashDiv.className = 'hash-display bg-body-secondary';
+                    hashDiv.textContent = h.value;
+
+                    body.appendChild(header);
+                    body.appendChild(hashDiv);
+                    card.appendChild(body);
+                    container.appendChild(card);
+                });
+            } catch(e) { console.error(e); }
+        }
+    })();
+    </script>
+}

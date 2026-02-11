@@ -1,0 +1,170 @@
+@{
+    ViewData["Title"] = "Verify File Integrity";
+    var resultJson = ViewBag.Result as string;
+    var error = ViewBag.Error as string;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-4">
+                <i class="bi bi-patch-check-fill display-4 text-success"></i>
+                <h2 class="mt-2">Verify File Integrity</h2>
+                <p class="text-muted">
+                    Upload a file and provide a known hash to check if the file has been tampered with.
+                </p>
+            </div>
+
+            <div class="card shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <form asp-action="Verify" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">File to Verify</label>
+                            <div class="drop-zone" id="verifyDropZone">
+                                <div class="drop-icon"><i class="bi bi-file-earmark-check"></i></div>
+                                <p class="mb-1 fw-semibold">Drag &amp; drop file here</p>
+                                <p class="text-muted small mb-0">or click to browse</p>
+                                <input type="file" name="file" class="d-none" id="verifyFileInput" />
+                                <div id="verifyFileName" class="mt-2" style="display:none;"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Hash Algorithm</label>
+                            <select class="form-select" name="algorithm">
+                                <option value="SHA256" selected>SHA-256</option>
+                                <option value="SHA512">SHA-512</option>
+                                <option value="MD5">MD5</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Expected Hash</label>
+                            <textarea class="form-control font-monospace" name="hash" rows="3"
+                                      placeholder="Paste the expected hash value here..." style="font-size: 0.85rem;"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 btn-lg">
+                            <i class="bi bi-check-circle me-1"></i> Verify
+                        </button>
+                    </form>
+
+                    @if (!string.IsNullOrEmpty(error))
+                    {
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i> @error
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Result placeholder -->
+            <div class="mt-4" id="verifyResult"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data for JS -->
+@if (!string.IsNullOrEmpty(resultJson))
+{
+    <script id="verifyResultData" type="application/json">@Html.Raw(resultJson)</script>
+}
+
+@section Scripts {
+    <script>
+    (function() {
+        // Drop zone logic
+        var dropZone = document.getElementById('verifyDropZone');
+        var fileInput = document.getElementById('verifyFileInput');
+        var fileNameEl = document.getElementById('verifyFileName');
+
+        dropZone.addEventListener('click', function() { fileInput.click(); });
+
+        ['dragenter','dragover'].forEach(function(evt) {
+            dropZone.addEventListener(evt, function(e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        });
+        ['dragleave','drop'].forEach(function(evt) {
+            dropZone.addEventListener(evt, function(e) { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            fileInput.files = e.dataTransfer.files;
+            showFileName(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', function() { showFileName(fileInput.files); });
+
+        function showFileName(files) {
+            if (files.length > 0) {
+                fileNameEl.style.display = 'block';
+                fileNameEl.textContent = files[0].name;
+                fileNameEl.className = 'mt-2 badge bg-primary';
+            }
+        }
+
+        // Show result
+        var dataEl = document.getElementById('verifyResultData');
+        if (dataEl) {
+            try {
+                var result = JSON.parse(dataEl.textContent);
+                var container = document.getElementById('verifyResult');
+                var isMatch = result.match;
+
+                var div = document.createElement('div');
+                div.className = 'verify-result ' + (isMatch ? 'verify-match' : 'verify-mismatch');
+
+                var icon = document.createElement('i');
+                icon.className = isMatch ? 'bi bi-check-circle-fill text-success' : 'bi bi-x-circle-fill text-danger';
+                icon.style.fontSize = '3rem';
+                div.appendChild(icon);
+
+                var title = document.createElement('h3');
+                title.className = 'mt-2';
+                title.textContent = isMatch ? 'Match! File is authentic.' : 'Mismatch! File may be tampered.';
+                div.appendChild(title);
+
+                var fileInfo = document.createElement('p');
+                fileInfo.className = 'mb-0';
+                fileInfo.innerHTML = '<strong>File:</strong> ' + result.fileName;
+                div.appendChild(fileInfo);
+
+                var algoInfo = document.createElement('p');
+                algoInfo.className = 'mb-0';
+                algoInfo.innerHTML = '<strong>Algorithm:</strong> ' + result.algorithm;
+                div.appendChild(algoInfo);
+
+                var hr = document.createElement('hr');
+                div.appendChild(hr);
+
+                var details = document.createElement('div');
+                details.className = 'text-start';
+
+                var expLabel = document.createElement('p');
+                expLabel.className = 'mb-1';
+                expLabel.innerHTML = '<strong>Expected:</strong>';
+                details.appendChild(expLabel);
+
+                var expHash = document.createElement('div');
+                expHash.className = 'hash-display bg-body-secondary';
+                expHash.textContent = result.expectedHash;
+                details.appendChild(expHash);
+
+                var actLabel = document.createElement('p');
+                actLabel.className = 'mb-1 mt-2';
+                actLabel.innerHTML = '<strong>Actual:</strong>';
+                details.appendChild(actLabel);
+
+                var actHash = document.createElement('div');
+                actHash.className = 'hash-display bg-body-secondary';
+                actHash.textContent = result.actualHash;
+                details.appendChild(actHash);
+
+                div.appendChild(details);
+                container.appendChild(div);
+            } catch(e) { console.error(e); }
+        }
+    })();
+    </script>
+}

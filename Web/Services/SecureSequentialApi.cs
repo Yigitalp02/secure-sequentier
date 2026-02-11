@@ -7,6 +7,9 @@ namespace Web.Services
     {
         Task<bool> UploadAsync(IFormFile file, string profile, string targetApp, string runId);
         Task<(Stream? stream, string? fileName)> DownloadAsync(string runId, string user);
+        Task<string?> VerifyAsync(IFormFile file, string hash, string algorithm);
+        Task<string?> HashAsync(IFormFile file);
+        Task<string?> GetStatsAsync();
     }
 
     public sealed class SecureSequentialApi : ISecureSequentialApi
@@ -48,6 +51,37 @@ namespace Web.Services
             var fileName = resp.Content.Headers.ContentDisposition?.FileName?.Trim('"')
                            ?? $"output_{runId[..Math.Min(8, runId.Length)]}.zip";
             return (stream, fileName);
+        }
+
+        public async Task<string?> VerifyAsync(IFormFile file, string hash, string algorithm)
+        {
+            using var mp = new MultipartFormDataContent();
+            await using var stream = file.OpenReadStream();
+            mp.Add(new StreamContent(stream), "file", file.FileName);
+            mp.Add(new StringContent(hash), "hash");
+            mp.Add(new StringContent(algorithm), "algorithm");
+
+            var resp = await _http.PostAsync("api/verify", mp);
+            if (!resp.IsSuccessStatusCode) return null;
+            return await resp.Content.ReadAsStringAsync();
+        }
+
+        public async Task<string?> HashAsync(IFormFile file)
+        {
+            using var mp = new MultipartFormDataContent();
+            await using var stream = file.OpenReadStream();
+            mp.Add(new StreamContent(stream), "file", file.FileName);
+
+            var resp = await _http.PostAsync("api/hash", mp);
+            if (!resp.IsSuccessStatusCode) return null;
+            return await resp.Content.ReadAsStringAsync();
+        }
+
+        public async Task<string?> GetStatsAsync()
+        {
+            var resp = await _http.GetAsync("api/stats");
+            if (!resp.IsSuccessStatusCode) return null;
+            return await resp.Content.ReadAsStringAsync();
         }
     }
 }

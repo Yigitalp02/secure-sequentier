@@ -6,62 +6,67 @@
 
 @section Styles {
     <style>
-        /* File card spacing */
-        .file-card {
-            margin-bottom: 1rem;
-        }
-        /* Status border colors */
-        .st-completed .card {
-            border-left: 4px solid #28a745;
-        }
-
-        .st-failed .card {
-            border-left: 4px solid #dc3545;
-        }
-
-        .st-processing .card {
-            border-left: 4px solid #ffc107;
-        }
+        .file-card { margin-bottom: 1rem; }
+        .st-completed .card { border-left: 4px solid #28a745; }
+        .st-failed    .card { border-left: 4px solid #dc3545; }
+        .st-processing .card { border-left: 4px solid #ffc107; }
+        .st-pending   .card { border-left: 4px solid #6c757d; }
     </style>
 }
 
 <div class="container my-5">
-    <div class="card">
-        <div class="card-header bg-white">
-            <h2 class="mb-0">@displayName’s Batch Status</h2>
+    <div class="card shadow-sm rounded-4">
+        <div class="card-header bg-transparent border-0 pt-4 pb-0">
+            <h2 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>@displayName's Batch Status</h2>
         </div>
         <div class="card-body">
             @if (TempData["Message"] != null)
             {
-            <div class="alert alert-info">
-                @TempData["Message"]
-                @if (TempData["BatchId"] != null)
+                <div class="alert alert-info">
+                    @TempData["Message"]
+                    @if (TempData["BatchId"] != null)
                     {
-                <div class="text-muted small mt-1">
-                    (batch id @TempData["BatchId"])
-                </div>
+                        <div class="text-muted small mt-1">(batch id @TempData["BatchId"])</div>
                     }
-            </div>
+                </div>
             }
 
+            <!-- Overall Progress Bar -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="fw-semibold" id="progressLabel">Checking status…</span>
+                    <span class="text-muted small" id="progressPercent"></span>
+                </div>
+                <div class="progress batch-progress">
+                    <div id="progressBar" class="progress-bar bg-success" role="progressbar"
+                         style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+
             <div id="batchStatus" class="alert alert-light">
-                Checking status…
+                <i class="bi bi-hourglass-split me-1"></i> Loading batch information…
             </div>
 
             <div id="fileCards" class="mt-4">
                 @* JavaScript will inject individual file cards here *@
             </div>
 
-            <div id="downloadSection" class="mt-4" style="display: none;">
-                <a id="downloadBtn" href="#" class="btn btn-success me-2">
-                    <i class="bi bi-download me-1"></i> Download Results (ZIP)
+            <!-- Action buttons -->
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <div id="downloadSection" style="display: none;">
+                    <a id="downloadBtn" href="#" class="btn btn-success">
+                        <i class="bi bi-download me-1"></i> Download Results (ZIP)
+                    </a>
+                </div>
+                <div id="certificateSection" style="display: none;">
+                    <a id="certificateBtn" href="#" class="btn btn-outline-primary">
+                        <i class="bi bi-award me-1"></i> View Certificate
+                    </a>
+                </div>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left-circle me-1"></i> Back to Upload
                 </a>
-                <small class="text-muted">Output files are automatically deleted after the configured retention period.</small>
             </div>
-
-            <a asp-action="Index" class="btn btn-outline-secondary mt-4">
-                <i class="bi bi-arrow-left-circle me-1"></i> Back to Upload
-            </a>
         </div>
     </div>
 </div>
@@ -74,15 +79,31 @@
           const fileCardsEl = document.getElementById("fileCards");
           const downloadSection = document.getElementById("downloadSection");
           const downloadBtn = document.getElementById("downloadBtn");
+          const certificateSection = document.getElementById("certificateSection");
+          const certificateBtn = document.getElementById("certificateBtn");
+          const progressBar = document.getElementById("progressBar");
+          const progressLabel = document.getElementById("progressLabel");
+          const progressPercent = document.getElementById("progressPercent");
+
+          function copyHash(text, btn) {
+              navigator.clipboard.writeText(text).then(() => {
+                  const orig = btn.innerHTML;
+                  btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+                  btn.classList.replace('btn-outline-secondary', 'btn-success');
+                  setTimeout(() => {
+                      btn.innerHTML = orig;
+                      btn.classList.replace('btn-success', 'btn-outline-secondary');
+                  }, 1500);
+              });
+          }
+          window.copyHash = copyHash;
 
           async function poll() {
             const res = await fetch(`/FileQueue/BatchStatus?runId=${runId}`);
             if (!res.ok) return;
 
             const job = await res.json();
-            const dt  = job.startedAt
-                         ? new Date(job.startedAt)
-                         : new Date();
+            const dt  = job.startedAt ? new Date(job.startedAt) : new Date();
             const date = dt.toLocaleDateString("tr-TR");
             const time = dt.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
 
@@ -90,48 +111,62 @@
             const completed  = job.files.filter(f => f.status === "Completed").length;
             const failed     = job.files.filter(f => f.status === "Failed").length;
             const processing = job.files.filter(f => f.status === "Processing").length;
+            const done = completed + failed;
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+            // Update progress bar
+            progressBar.style.width = pct + '%';
+            progressBar.setAttribute('aria-valuenow', pct);
+            progressPercent.textContent = pct + '%';
+
+            if (processing > 0) {
+                progressBar.classList.remove('bg-success', 'bg-danger');
+                progressBar.classList.add('bg-warning', 'progress-bar-striped', 'progress-bar-animated');
+                progressLabel.innerHTML = `<i class="bi bi-gear-fill me-1 spin"></i> Processing… ${done}/${total}`;
+            } else if (failed > 0 && completed === 0) {
+                progressBar.classList.remove('bg-warning', 'bg-success', 'progress-bar-striped', 'progress-bar-animated');
+                progressBar.classList.add('bg-danger');
+                progressLabel.innerHTML = `<i class="bi bi-x-circle me-1"></i> Failed`;
+            } else {
+                progressBar.classList.remove('bg-warning', 'progress-bar-striped', 'progress-bar-animated');
+                progressBar.classList.add('bg-success');
+                progressLabel.innerHTML = `<i class="bi bi-check-circle me-1"></i> Complete`;
+            }
 
             let summary;
             if (processing > 0) {
-              summary = `Processing… ${processing} / ${total}`;
+              summary = `<i class="bi bi-hourglass-split me-1"></i> Processing… ${processing}/${total} remaining`;
             } else {
-              summary = `${completed} / ${total} completed`;
-              if (failed > 0) summary += `, ${failed} failed`;
+              summary = `<i class="bi bi-check-circle me-1"></i> ${completed}/${total} completed`;
+              if (failed > 0) summary += `, <span class="text-danger">${failed} failed</span>`;
             }
-            statusEl.textContent = `${date} ${time} → ${summary}`;
+            statusEl.innerHTML = `${date} ${time} — ${summary}`;
 
-            // clear existing cards
             fileCardsEl.innerHTML = "";
 
-            // build a card for each file
             (job.files || []).forEach(f => {
-              // outer wrapper to get the status class for border-color
               const wrapper = document.createElement("div");
               wrapper.className = "file-card st-" + (f.status || "").toLowerCase();
 
-              // create the card
               const card = document.createElement("div");
               card.className = "card";
 
               const body = document.createElement("div");
               body.className = "card-body";
 
-              // title = filename
-              const title = document.createElement("h5");
+              const title = document.createElement("h6");
               title.className = "card-title mb-1";
-              title.textContent = f.path.split('\\').pop();
+              const fileName = f.path.split('\\').pop().split('/').pop();
+              title.innerHTML = `<i class="bi bi-file-earmark me-1"></i> ${fileName}`;
 
-              // status badge
               const badge = document.createElement("span");
               badge.className = "badge me-2 " +
-                (f.status === "Completed"
-                  ? "bg-success"
-                  : f.status === "Failed"
-                    ? "bg-danger"
-                    : "bg-warning text-dark");
+                (f.status === "Completed" ? "bg-success"
+                  : f.status === "Failed" ? "bg-danger"
+                    : f.status === "Processing" ? "bg-warning text-dark"
+                    : "bg-secondary");
               badge.textContent = f.status;
 
-              // retry badge (only if retries > 0)
               let retry = null;
               if (f.retries > 0) {
                 retry = document.createElement("span");
@@ -139,7 +174,6 @@
                 retry.textContent = "retries: " + f.retries;
               }
 
-              // timestamps
               const times = document.createElement("p");
               times.className = "card-text small text-muted mb-0";
               const started = f.startedAt
@@ -150,7 +184,6 @@
                 : "";
               times.textContent = started + finished;
 
-              // assemble
               body.appendChild(title);
               body.appendChild(badge);
               if (retry) body.appendChild(retry);
@@ -161,11 +194,13 @@
               fileCardsEl.appendChild(wrapper);
             });
 
-            // Show download button when batch is done and has completed files
+            // Show download & certificate when done
             if (job.status === "Completed" || job.status === "Failed") {
               if (completed > 0) {
                 downloadSection.style.display = "block";
                 downloadBtn.href = `/FileQueue/Download?runId=${runId}`;
+                certificateSection.style.display = "block";
+                certificateBtn.href = `/FileQueue/Certificate?runId=${runId}`;
               }
             } else {
               setTimeout(poll, 600);

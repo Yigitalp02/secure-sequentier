@@ -20,7 +20,8 @@ RUN dotnet build "Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+# Exclude appsettings.json from referenced project to avoid conflict
+RUN dotnet publish "Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false /p:ExcludeReferencedProjectsFromPublish=true
 
 FROM base AS final
 WORKDIR /app

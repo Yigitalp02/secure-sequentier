@@ -1,153 +1,63 @@
-## .NET Core / Visual Studio
+## .NET / Visual Studio
 bin/
 obj/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
 *.userprefs
+*.rsuser
 
-# Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
-
-# Visual Studio cache/options
+# IDE
 .vs/
 .vscode/
-*.vsidx
-*.vspscc
-*.vsp
-*.vspx
-*.vsscc
-
-# Rider
 .idea/
 *.sln.iml
+*.vsidx
 
-# User-specific files
-*.rsuser
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# NuGet Packages
+# NuGet
 *.nupkg
 *.snupkg
 **/packages/*
 !**/packages/build/
-*.nuget.props
-*.nuget.targets
 project.lock.json
 project.fragment.lock.json
 artifacts/
 
-# .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# ASP.NET Scaffolding
-ScaffoldingReadMe.txt
-
-# Files built by Visual Studio
-*_i.c
-*_p.c
-*_h.h
+# Build artifacts
 *.ilk
-*.meta
-*.obj
-*.iobj
-*.pch
 *.pdb
-*.ipdb
-*.pgc
-*.pgd
-*.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
-*.tmp
-*.tmp_proj
-*_wpftmp.csproj
+*.obj
 *.log
-*.vspscc
-*.vssscc
-.builds
-*.pidb
-*.svclog
-*.scc
+*.tmp
 
-# Windows image file caches
+# OS files
 Thumbs.db
 ehthumbs.db
-
-# Folder config file
 Desktop.ini
-
-# Recycle Bin used on file shares
 $RECYCLE.BIN/
-
-# Mac desktop service store files
 .DS_Store
-
-# JetBrains Rider
-.idea/
-*.sln.iml
-
-# User-specific files
-*.rsuser
-
-# Build results
-[Dd]ebug/
-[Rr]elease/
-x64/
-x86/
-bld/
-[Oo]ut/
-
-# MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
-
-# .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# Visual Studio Code
-.vscode/
-
-# Local configuration files (user-specific)
-appsettings.Development.json
-appsettings.Local.json
-*.local.json
 
 # User-specific configuration (contains hardcoded paths)
 SecureSolution2/DefaultConfig.json
 
-# Sensitive data
+# Environment-specific
+appsettings.Development.json
+appsettings.Local.json
+*.local.json
 secrets.json
 *.secrets.json
 
-# Docker
+# Docker runtime
 .docker/
 
 # Data directories (created at runtime)
 data/
 
-# Ignore built subsystem binaries but keep source code
+# Subsystem build artifacts (source code is tracked)
 Subsystems/**/bin/
 Subsystems/**/obj/

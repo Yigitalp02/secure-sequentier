@@ -1,149 +1,197 @@
-# Secure Sequentier - Secure File Processing System
+# 🔒 Secure Sequentier
 
-A secure file processing system with a web interface that allows users to upload files and process them through various subsystems (signers, processors, etc.). The system provides real-time job monitoring, configurable processing pipelines, and comprehensive audit trails.
+A web-based file signing and verification platform powered by real cryptographic algorithms. Upload files for batch digital signing, verify file integrity, and calculate hashes — all through a modern web interface.
 
-## Project Structure
+**Live:** [secure.ybilgin.com](https://secure.ybilgin.com)
 
-- **SecureSolution2**: The main API service that handles file processing, job queuing, and orchestration
-- **Web**: The web interface (MVC) that provides a user-friendly interface for file uploads and job monitoring
-
-## Features
-
-- **File Upload**: Upload multiple files through a web interface
-- **Job Queue**: Process files in batches with configurable retry logic
-- **Real-time Status**: Monitor job progress with SignalR updates
-- **User Profiles**: Per-user configuration and file storage
-- **History Tracking**: View past job runs and their status
-- **Configurable Subsystems**: Support for multiple processing applications (signers, processors, etc.)
-
-## Setup Instructions
-
-### Prerequisites
-
-- .NET 8.0 SDK
-- Visual Studio 2022 or VS Code
-
-### Configuration
-
-1. **Copy Configuration Template**: 
-   ```bash
-   cp SecureSolution2/DefaultConfig.json.example SecureSolution2/DefaultConfig.json
-   ```
-
-2. **Update Paths**: Edit `SecureSolution2/DefaultConfig.json` and replace `{USER}` with your Windows username, or customize paths as needed:
-   - Update executable paths for your subsystem applications
-   - Update output directories
-   - Configure timeout and retry settings
-
-3. **Create Directories**: Create the following directory structure (replace `{USER}` with your username):
-   ```
-   C:\Users\{USER}\SecureWatch\
-   C:\Users\{USER}\SecureSequentialProfiles\{USER}\
-   C:\Users\{USER}\Processed\{USER}\
-   C:\Users\{USER}\Subsystems\
-   ```
-
-4. **Subsystem Applications**: Place your processing applications in the Subsystems directory:
-   - SignerApp.exe
-   - DummySuccessApp.exe
-   - etc.
-
-### Running the Application
-
-#### **Easy Method (Recommended):**
-1. **Run the startup script**:
-   ```powershell
-   .\start_secure_solution.ps1
-   ```
-   - This will automatically start both backend and frontend
-   - Opens the web interface in your browser
-   - Press any key in the console to stop both applications
-
-#### **Manual Method:**
-1. **Start the API Service**:
-   ```bash
-   cd SecureSolution2
-   dotnet run
-   ```
-   The API will run on `http://localhost:9999`
-
-2. **Start the Web Interface**:
-   ```bash
-   cd Web
-   dotnet run
-   ```
-   The web interface will run on `http://localhost:5188`
-
-### Usage
-
-1. Open the web interface in your browser
-2. Select a target application (signer, sub-system1, etc.)
-3. Upload one or more files
-4. Monitor the processing status in real-time
-5. View job history and details
-
-## Configuration Details
-
-### DefaultConfig.json
-- `WatchDirectory`: Directory where uploaded files are placed
-- `QueueDirectory`: Directory for job queue files and logs
-- `TimeoutSeconds`: Timeout for each file processing
-- `DefaultRetryCount`: Number of retries for failed files
-- `Mapping`: Configuration for each subsystem (executable path, output directory)
-
-### User Configuration
-The system automatically creates per-user configurations by replacing `{USER}` placeholders with the current user's name.
-
-## Architecture
-
-- **QueueStore**: Manages job queues and persistence
-- **OrchestratorBackgroundService**: Processes jobs in the background
-- **QueueHub**: SignalR hub for real-time updates
-- **FileQueueController**: Web interface for file uploads and status
-- **SecureSequentialApi**: HTTP client for communication between projects
-
-## Development Notes
-
-- The system uses Serilog for structured logging
-- Jobs are persisted as JSON files in daily queue files
-- Each user has their own directory structure
-- The web interface polls for status updates
-- SignalR provides real-time updates for active jobs
-
-## Troubleshooting
-
-1. **Build Issues**: Ensure all NuGet packages are restored
-2. **Path Issues**: Verify all paths in configuration files exist
-3. **Permission Issues**: Ensure the application has write access to configured directories
-4. **Port Conflicts**: Check if ports 5087 and the web port are available
-
-## License
-
-This project was developed as part of an internship project.
-
-## Docker Deployment
-
-This application can be deployed on Linux servers using Docker. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions on deploying to a Linux server with Cloudflare Tunnel.
-
-### Quick Docker Start (Development)
-
-```bash
-docker-compose up --build
-```
-
-### Production Deployment
-
-See `DEPLOYMENT.md` for production deployment instructions including:
-- Linux server setup
-- Cloudflare Tunnel configuration
-- Production docker-compose setup
-- Signature application builds for Linux
-
-## Author
-
-Yiğit Alp Bilgin - Internship Project
+![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-**Note**: Make sure to copy `DefaultConfig.json.example` to `DefaultConfig.json` and update the paths before running the application.
+## ✨ Features
 
+| Feature | Description |
+|---------|-------------|
+| **Digital Signing** | Upload files and generate cryptographic signatures using SHA-256, SHA-512, and MD5 |
+| **File Verification** | Verify file integrity by comparing against a known hash — runs entirely in-browser |
+| **Hash Calculator** | Instantly calculate SHA-256, SHA-512, and MD5 hashes for any file — client-side |
+| **Batch Processing** | Upload multiple files at once with real-time progress tracking |
+| **Download Results** | Download all signed outputs as a ZIP archive |
+| **Signature Certificate** | Generate a printable certificate for each signed batch |
+| **Run History** | Browse, sort, and filter all past signing runs by date |
+| **Dark Mode** | Toggle between light and dark themes |
+| **Drag & Drop** | Modern drag-and-drop upload zones on all file inputs |
+| **Auto-Cleanup** | Configurable retention period for processed files |
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐     HTTP      ┌─────────────────┐
+│   Frontend      │ ──────────►   │    Backend       │
+│   (ASP.NET MVC) │   REST API    │   (ASP.NET Core) │
+│   Port 5188     │ ◄──────────   │   Port 9999      │
+└─────────────────┘               └────────┬─────────┘
+                                           │
+                                  ┌────────▼─────────┐
+                                  │  Signer Apps      │
+                                  │  • SignerApp      │
+                                  │  • AdvancedSigner │
+                                  └──────────────────┘
+```
+
+- **Frontend** — ASP.NET Core MVC with Bootstrap 5, Bootstrap Icons, CryptoJS
+- **Backend** — Minimal API with SignalR, Serilog, background services
+- **Subsystems** — Console apps that perform the actual cryptographic signing
+- **Orchestrator** — Background service that dequeues jobs, spawns signer processes, handles retries/timeouts
+- **Cleanup Service** — Background service that removes old files based on retention settings
+
+## 🔐 Algorithms
+
+| Algorithm | Output | Use Case |
+|-----------|--------|----------|
+| **SHA-256** | 64-char hex | Digital signatures, TLS, blockchain |
+| **SHA-512** | 128-char hex | Password hashing, high-security verification |
+| **MD5** | 32-char hex | Quick checksums, file integrity |
+
+## 🚀 Deployment (Docker)
+
+### Prerequisites
+
+- Docker & Docker Compose
+- Git
+
+### Quick Start
+
+```bash
+# Clone
+git clone https://github.com/Yigitalp02/secure-sequentier.git
+cd secure-sequentier
+
+# Create config
+cp DefaultConfig.example.json SecureSolution2/DefaultConfig.json
+
+# Build & run
+docker compose up -d --build
+```
+
+The app will be available at:
+- **Frontend:** http://localhost:5188
+- **Backend API:** http://localhost:9999
+
+### Production Deployment
+
+For production on a Linux server with an existing Docker stack:
+
+```bash
+# Clone to your server
+git clone https://github.com/Yigitalp02/secure-sequentier.git /opt/stack/secure-sequentier
+
+# Create directories
+sudo mkdir -p /opt/stack/data/secure-sequentier/{watch,queue,processed,logs}
+sudo mkdir -p /opt/stack/config/secure-sequentier
+
+# Copy and edit config
+sudo cp /opt/stack/secure-sequentier/DefaultConfig.example.json \
+        /opt/stack/config/secure-sequentier/DefaultConfig.json
+
+# Add services to your docker-compose.yml (see docker-compose.stack.yml for reference)
+# Build and start
+sudo docker compose build secure-sequentier-backend secure-sequentier-frontend
+sudo docker compose up -d secure-sequentier-backend secure-sequentier-frontend
+```
+
+### Configuration
+
+Edit `DefaultConfig.json` to customize:
+
+```json
+{
+  "WatchDirectory": "/app/data/watch",
+  "QueueDirectory": "/app/data/queue/{USER}",
+  "TimeoutSeconds": 30,
+  "DefaultRetryCount": 3,
+  "FileRetentionHours": 1,
+  "Mapping": {
+    "signer": {
+      "ExecutablePath": "/app/subsystems/SignerApp/SignerApp",
+      "OutputDirectory": "/app/data/processed/{USER}/signatures"
+    },
+    "advanced-signer": {
+      "ExecutablePath": "/app/subsystems/AdvancedSignerApp/AdvancedSignerApp",
+      "OutputDirectory": "/app/data/processed/{USER}/advanced-signatures"
+    }
+  }
+}
+```
+
+| Setting | Description |
+|---------|-------------|
+| `TimeoutSeconds` | Max time per file before retry (hot-reloadable) |
+| `DefaultRetryCount` | Number of retry attempts per file |
+| `FileRetentionHours` | Hours before processed files are auto-deleted (0 = disabled) |
+| `{USER}` | Placeholder replaced with the user's session ID at runtime |
+
+### Cloudflare Tunnel (HTTPS)
+
+To expose via Cloudflare Zero Trust Tunnel, add to your tunnel config:
+
+```yaml
+- hostname: secure.yourdomain.com
+  service: http://secure-sequentier-frontend:5188
+```
+
+## 🛠️ Local Development
+
+### Prerequisites
+
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+### Run Locally
+
+```bash
+# Terminal 1 — Backend
+cd SecureSolution2
+dotnet run
+
+# Terminal 2 — Frontend
+cd Web
+dotnet run
+```
+
+## 📁 Project Structure
+
+```
+secure-sequentier/
+├── SecureSolution2/          # Backend API
+│   ├── Program.cs            # Entry point, API endpoints
+│   ├── Services/             # Orchestrator, Queue, Config, Cleanup
+│   ├── Models/               # Job, JobFile, UserConfig
+│   ├── Hubs/                 # SignalR hub
+│   └── Dockerfile
+├── Web/                      # Frontend MVC
+│   ├── Controllers/          # FileQueueController (upload, verify, hash, etc.)
+│   ├── Views/FileQueue/      # Index, Queue, History, Verify, HashCalculator, About, Certificate
+│   ├── Services/             # API client
+│   └── Dockerfile
+├── Subsystems/               # Signer applications
+│   ├── SignerApp/             # SHA-256 signer
+│   └── AdvancedSignerApp/    # Multi-algorithm signer (SHA-256 + SHA-512 + MD5)
+├── docker-compose.yml        # Local Docker setup
+├── docker-compose.stack.yml  # Production stack reference
+└── DefaultConfig.example.json
+```
+
+## 🧰 Tech Stack
+
+- **Backend:** .NET 8, ASP.NET Core Minimal API, SignalR, Serilog
+- **Frontend:** ASP.NET Core MVC, Bootstrap 5, Bootstrap Icons, CryptoJS
+- **Infrastructure:** Docker, Docker Compose, Cloudflare Tunnel
+- **Server:** Ubuntu Server 24.04 LTS
+
+## 👤 Author
+
+**Yiğit Alp Bilgin**
+
+Developed as an internship project. Deployed on a home server via Docker and Cloudflare Zero Trust Tunnel.
